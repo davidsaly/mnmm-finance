@@ -4,8 +4,10 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { Input, Button } from 'react-native-elements';
 import { StackScreenProps } from '@react-navigation/stack';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from "firebase/firestore";
 
 const auth = getAuth();
+const db = getFirestore();
 
 const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
   const [value, setValue] = React.useState({
@@ -25,12 +27,47 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
 
     try {
       await createUserWithEmailAndPassword(auth, value.email, value.password);
+      const currentUser = auth.currentUser;
+      await createUserAndPortfolios(currentUser);
       navigation.navigate('Sign In');
     } catch (error) {
       setValue({
         ...value,
         error: error.message,
       })
+    }
+  }
+
+  async function createUserAndPortfolios(user: any) {
+    const email = user?.email;
+    const uid: string = user?.uid || '';
+
+    try {
+      const docRef = await setDoc(doc(db, 'users', uid), {
+        name: email,
+        email,
+      }, { merge: true });
+      console.log('User document written with ID: ', uid);
+    } catch (e) {
+      console.error('Error adding document: ', e);
+    }
+    try {
+      const docRef = await setDoc(doc(db, 'users', uid, 'portfolios', 'performing'), {
+        name: 'Investments',
+        type: 'performing',
+      }, { merge: true });
+      console.log('Portfolio document written with ID: ', 'performing');
+    } catch (e) {
+      console.error('Error adding document: ', e);
+    }
+    try {
+      const docRef = await setDoc(doc(db, 'users', uid, 'portfolios', 'nonperforming'), {
+        name: 'Cash',
+        type: 'nonperforming',
+      }, { merge: true });
+      console.log('Portfolio document written with ID: ', 'nonperforming');
+    } catch (e) {
+      console.error('Error adding document: ', e);
     }
   }
 
