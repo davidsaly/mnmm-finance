@@ -1,32 +1,31 @@
-// import { StatusBar } from 'expo-status-bar';
-// import { StyleSheet, Text, View } from 'react-native';
+
+import React from 'react';
+import './config/firebase';
+import { NativeBaseProvider, extendTheme } from "native-base";
+import RootNavigation from './navigation';
+
+export default function () {
+  const theme = extendTheme({
+    colors: {
+      // primary: {
+      // 50: 'white',
+      // },
+    },
+    config: {
+      // initialColorMode: 'dark',
+    },
+  });
+  return (
+    <NativeBaseProvider>
+      <RootNavigation />
+    </NativeBaseProvider>
+  );
+}
 
 // export default function App() {
 //   return (
-//     <View style={styles.container}>
-//       <Text>Open up App.tsx to start working on your app!</Text>
-//       <StatusBar style="auto" />
-//     </View>
+//     <NativeBaseProvider>
+//       <RootNavigation />
+//     </NativeBaseProvider>
 //   );
 // }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#fff',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//   },
-// });
-import React from 'react';
-import './config/firebase';
-import { ThemeProvider } from 'react-native-elements';
-import RootNavigation from './navigation';
-
-export default function App() {
-  return (
-    <ThemeProvider>
-      <RootNavigation />
-    </ThemeProvider>
-  );
-}

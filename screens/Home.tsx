@@ -1,7 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
-import { Button, Tile } from 'react-native-elements';
+import {
+  Box,
+  Heading,
+  VStack,
+  Button,
+  Center,
+  Container,
+  Text,
+  HStack,
+  Divider,
+  Pressable,
+  Spacer,
+} from "native-base";
 import { getAuth, signOut } from "firebase/auth";
 import { getFirestore, collection, getDocs, DocumentData } from "firebase/firestore";
 
@@ -32,30 +43,76 @@ export default function HomeScreen() {
   });
 
   const portfolioList = data.map(d =>
-    <Tile
-      title= {d.name}
-      featured
-      height={200}
-      style={{ marginTop: 20, margin: 20 }}
-    />);
+    <Pressable key={d.name} onPress={() => console.log("I'm Pressed")}>
+      <Box h="140" w="64" borderWidth="1" borderColor="coolGray.300" shadow="3" bg="coolGray.100" p="5" rounded="8">
+        <HStack>
+          <Text color="coolGray.800" mt="3" fontWeight="medium" fontSize="lg">
+          {d.name}
+          </Text>
+          <Spacer />
+          <Text color="coolGray.800" mt="3" fontWeight="medium" fontSize="xl">
+            7500 USD
+          </Text>
+        </HStack>
+        <HStack>
+          <Text mt="2" fontSize="xs" color="coolGray.700">
+            Profit and Loss:
+          </Text>
+          <Spacer />
+          <Text mt="2" fontSize="sm" color="coolGray.700">
+            1300 USD
+          </Text>
+        </HStack>
+        <HStack>
+          <Text mt="2" fontSize="xs" color="coolGray.700">
+            Performance
+          </Text>
+          <Spacer />
+          <Text mt="2" fontSize="sm" color="coolGray.700">
+            13%
+          </Text>
+        </HStack>
+      </Box>
+    </Pressable>
+  );
 
   return (
-    <View style={styles.container}>
-      <Text>Welcome {user?.email}!</Text>
-      <Button title="Sign Out" style={styles.button} onPress={() => signOut(auth)} />
-      {portfolioList}
-    </View>
+    <Center>
+      <Container centerContent={true}>
+        <Text mt="3" fontWeight="medium">
+          Total Value
+        </Text>
+        <Heading>
+          <Text color="darkBlue.700"> 7500 USD</Text>
+        </Heading>
+      </Container>
+      <Divider my="5" />
+      <HStack space={3} justifyContent="center">
+        <Center height={60} w="20" bg="info.50" rounded="md" shadow={3}
+          _text={{
+            color: "blue.900",
+            fontSize: "xs"
+          }} >
+          Add Transaction
+        </Center>
+        <Center height={60} w="20" bg="light.50" rounded="md" shadow={3}
+          _text={{
+            color: "cyan.900",
+            fontSize: "xs"
+          }} >
+          Add Value
+        </Center>
+        {/* <Center height={60} w="20" bg="indigo.50" rounded="md" shadow={3} /> */}
+      </HStack>
+      <Divider my="5" />
+      <VStack space={4} alignItems="center">
+        {portfolioList}
+      </VStack>
+      <Divider my="5" />
+      <Text>{user?.email}</Text>
+      <Button variant="link" colorScheme="muted" onPress={() => signOut(auth)}>
+        Sign out
+      </Button>
+    </Center>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  button: {
-    marginTop: 10
-  }
-});

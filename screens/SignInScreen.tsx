@@ -1,7 +1,12 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import { Input, Button } from 'react-native-elements';
+import {
+  Box,
+  Heading,
+  VStack,
+  Input,
+  Button,
+  Center
+} from "native-base";
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 
 const auth = getAuth();
@@ -12,6 +17,9 @@ const SignInScreen = () => {
     password: '',
     error: ''
   })
+
+  const [show, setShow] = React.useState(false);
+  const handleClick = () => setShow(!show);
 
   async function signIn() {
     if (value.email === '' || value.password === '') {
@@ -33,65 +41,44 @@ const SignInScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <Text>Signin screen!</Text>
-
-      {!!value.error && <View style={styles.error}><Text>{value.error}</Text></View>}
-
-      <View style={styles.controls}>
-        <Input
-          placeholder='Email'
-          containerStyle={styles.control}
-          value={value.email}
-          onChangeText={(text) => setValue({ ...value, email: text })}
-          leftIcon={<Icon
-            name='envelope'
-            size={16}
-          />}
-        />
-
-        <Input
-          placeholder='Password'
-          containerStyle={styles.control}
-          value={value.password}
-          onChangeText={(text) => setValue({ ...value, password: text })}
-          secureTextEntry={true}
-          leftIcon={<Icon
-            name='key'
-            size={16}
-          />}
-        />
-
-        <Button title="Sign in" buttonStyle={styles.control} onPress={signIn} />
-      </View>
-    </View>
+    <Center flex={1} px="3">
+      <Center w="100%">
+        <Box safeArea p="2" w="90%" maxW="290" py="8">
+          <Heading size="lg" color="coolGray.800" _dark={{
+            color: "warmGray.50"
+          }} fontWeight="semibold">
+            Sign in
+          </Heading>
+          <VStack space={3} mt="5">
+            <Input
+              type="text"
+              w="full"
+              maxW="300px"
+              // py="0"
+              value={value.email}
+              onChangeText={(text) => setValue({ ...value, email: text })}
+              placeholder="email" />
+            <Input
+              type={show ? "text" : "password"}
+              w="full"
+              maxW="300px"
+              // py="0"
+              value={value.password}
+              onChangeText={(text) => setValue({ ...value, password: text })}
+              InputRightElement={
+                <Button size="xs" rounded="none" w="1/6" h="full" onPress={handleClick}>
+                  {show ? "Hide" : "Show"}
+                </Button>
+              }
+              placeholder="password" />
+            <Button mt="2" colorScheme="cyan" onPress={signIn}>
+              Sign in
+            </Button>
+          </VStack>
+        </Box>
+      </Center>
+    </Center>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 20,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  controls: {
-    flex: 1,
-    width: '50%',
-  },
-
-  control: {
-    marginTop: 10
-  },
-
-  error: {
-    marginTop: 10,
-    padding: 10,
-    color: '#fff',
-    backgroundColor: '#D54826FF',
-  }
-});
 
 export default SignInScreen;
