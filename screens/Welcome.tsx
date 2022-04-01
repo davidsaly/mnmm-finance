@@ -1,37 +1,42 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { Button } from 'react-native-elements';
+import {
+  Box,
+  Heading,
+  VStack,
+  Button,
+  Center,
+  NativeBaseProvider
+} from "native-base";
 
 const WelcomeScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
   return (
-    <View style={styles.container}>
-      <Text>Welcome screen!</Text>
-
-      <View style={styles.buttons}>
-        <Button title="Sign in" buttonStyle={styles.button} onPress={() => navigation.navigate('Sign In')} />
-        <Button title="Sign up" type="outline" buttonStyle={styles.button} onPress={() => navigation.navigate('Sign Up')} />
-      </View>
-    </View>
+    <Center flex={1} px="3">
+      <Center w="100%">
+        <Box safeArea p="2" w="90%" maxW="290" py="8">
+          <Heading size="lg" color="coolGray.800" _dark={{
+            color: "warmGray.50"
+          }} fontWeight="semibold">
+            Welcome
+          </Heading>
+          <Heading mt="1" color="coolGray.600" _dark={{
+            color: "warmGray.200"
+          }} fontWeight="medium" size="xs">
+            Sign in or sign up to continue!
+          </Heading>
+          <VStack space={3} mt="5">
+            <Button mt="2" colorScheme="cyan" onPress={() => navigation.navigate('Sign In')}>
+              Sign in
+            </Button>
+            <Button mt="2" colorScheme="cyan" onPress={() => navigation.navigate('Sign Up')}>
+              Sign up
+            </Button>
+          </VStack>
+        </Box>
+      </Center>
+    </Center>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 20,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  buttons: {
-    flex: 1,
-  },
-
-  button: {
-    marginTop: 10
-  }
-});
 
 export default WelcomeScreen;
