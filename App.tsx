@@ -1,8 +1,9 @@
-
+import 'react-native-gesture-handler';
 import React from 'react';
 import './config/firebase';
 import { NativeBaseProvider, extendTheme } from "native-base";
 import RootNavigation from './navigation';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function () {
   const theme = extendTheme({
@@ -16,16 +17,10 @@ export default function () {
     },
   });
   return (
-    <NativeBaseProvider>
-      <RootNavigation />
-    </NativeBaseProvider>
+    <SafeAreaProvider>
+      <NativeBaseProvider>
+        <RootNavigation />
+      </NativeBaseProvider>
+    </SafeAreaProvider>
   );
 }
-
-// export default function App() {
-//   return (
-//     <NativeBaseProvider>
-//       <RootNavigation />
-//     </NativeBaseProvider>
-//   );
-// }

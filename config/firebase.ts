@@ -1,9 +1,10 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import 'firebase/auth';
-// import "firebase/firestore";
+import "firebase/firestore";
 // import { getFirestore, setDoc, doc } from 'firebase/firestore';
 import Constants from 'expo-constants';
+import { getFirestore } from "firebase/firestore";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -20,12 +21,4 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// initialize Firestore
-// const firestore = getFirestore();
-
-// await setDoc(doc(firestore, "characters", "mario"), {
-//   employment: "plumber",
-//   outfitColor: "red",
-//   specialAttack: "fireball"
-// });
+export const db = getFirestore(app);
