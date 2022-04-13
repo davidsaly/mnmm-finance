@@ -36,7 +36,6 @@ export async function getAccountsForPortfolio(db: any, auth: any, pf: any) {
 
 export async function getAccounts(db: any, auth: any, portfolios: any) {
     let docs: DocumentData[] = [];
-    const defaultValue = [{ amount: "0", currency: "EUR"}] // DEFAULT CURRENCY
     for (let index = 0; index < portfolios.length; index++) {
         const accounts: DocumentData[] | undefined = await getAccountsForPortfolio(db, auth, portfolios[index]);
         docs = [...docs, ...accounts];
@@ -44,7 +43,8 @@ export async function getAccounts(db: any, auth: any, portfolios: any) {
     for (let index = 0; index < docs.length; index++) {
         const acc = docs[index];
         const value = await getLatestAccountValue(db, auth, acc.pf.id, acc.id);
-        const v = value && value.length? value : defaultValue;
+        const defaultValue = [{ amount: "0", currency: acc.currency }]
+        const v = value && value.length ? value : defaultValue;
         acc.value = v;
     }
     return docs;
@@ -54,15 +54,16 @@ export async function getValuesForAccount(db: any, auth: any, pfId: any, accId: 
     const user = auth.currentUser;
     const uid: string = user?.uid.toString() || '';
     const valuesRef = collection(db, 'users', uid, 'portfolios', pfId, 'accounts', accId, 'values');
+    const q = query(valuesRef, orderBy('date', 'desc'));
     try {
-        const values = await getDocs(valuesRef);
+        const values = await getDocs(q);
         let docs: DocumentData[] = [];
         values.forEach(doc => {
             docs = [...docs, { ...doc.data(), ...{ id: doc.id } }];
         });
         return docs;
     } catch (e) {
-        console.error('Error fetching accounts for portfolio', e);
+        console.error('Error fetching values for account', e);
     }
 }
 
@@ -79,6 +80,6 @@ export async function getLatestAccountValue(db: any, auth: any, pfId: any, accId
         });
         return docs;
     } catch (e) {
-        console.error('Error fetching accounts for portfolio', e);
+        console.error('Error fetching latest value for account', e);
     }
 }

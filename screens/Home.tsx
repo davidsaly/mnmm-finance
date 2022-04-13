@@ -158,7 +158,7 @@ export default function HomeScreen() {
           </Center>
           <Center height={60} w="20" bg="light.50" rounded="md" shadow={3}
             _text={{
-              color: "cyan.900",
+              color: "emerald.900",
               fontSize: "xs"
             }} >
             Add Value

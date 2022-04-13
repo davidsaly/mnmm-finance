@@ -71,7 +71,7 @@ const SignInScreen = () => {
                 </Button>
               }
               placeholder="password" />
-            <Button mt="2" colorScheme="cyan" onPress={signIn}>
+            <Button mt="2" colorScheme="emerald" onPress={signIn}>
               Sign in
             </Button>
           </VStack>

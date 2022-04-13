@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { auth } from '../utils/hooks/useAuthentication';
-import { getFirestore, collection, getDocs, DocumentData, onSnapshot } from "firebase/firestore";
-import { getPortfolios, getAccountsForPortfolio, getValuesForAccount, getLatestAccountValue, getAccounts } from '../utils/dataCalls';
-import {SafeAreaView} from'react-native-safe-area-context';
+import { getFirestore, DocumentData } from "firebase/firestore";
+import { getPortfolios, getAccounts } from '../utils/dataCalls';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
     Box,
     Heading,
@@ -16,6 +16,7 @@ import {
     Icon
 } from "native-base";
 import { Entypo } from "@expo/vector-icons";
+import { useIsFocused } from '@react-navigation/native';
 
 const db = getFirestore();
 
@@ -23,6 +24,7 @@ export default function AccountsScreen({ navigation, route }) { // route
     const [data, setData] = useState<DocumentData[]>([]);
     const [portfolios, setPortfolios] = useState<DocumentData[] | undefined>([]);
     const { accountAdded } = route.params || {};
+    const isFocused = useIsFocused();
 
     async function setAccountsData() {
         const portfolios: DocumentData[] | undefined = await getPortfolios(db, auth);
@@ -30,6 +32,10 @@ export default function AccountsScreen({ navigation, route }) { // route
         const accounts = await getAccounts(db, auth, portfolios);
         setData(accounts);
     };
+
+    useEffect(() => {
+        isFocused && setAccountsData()
+    }, [isFocused]);
 
     useEffect(() => {
         setAccountsData();
@@ -42,7 +48,7 @@ export default function AccountsScreen({ navigation, route }) { // route
     const AddIcon = () => {
         return <Box alignItems="center">
             <IconButton
-                onPress={() => navigation.navigate('AddAccountModal', { portfolios })}
+                onPress={() => navigation.navigate('Add Account', { portfolios })}
                 icon={<Icon as={Entypo} name="circle-with-plus" />}
                 borderRadius="full"
                 _icon={{
@@ -55,15 +61,15 @@ export default function AccountsScreen({ navigation, route }) { // route
                     _icon: {
                         name: "circle-with-plus"
                     },
-                //     _ios: {
-                //         _icon: {
-                //             size: "md"
-                //         }
-                //     }
-                // }} _ios={{
-                //     _icon: {
-                //         size: "md"
-                //     }
+                    //     _ios: {
+                    //         _icon: {
+                    //             size: "md"
+                    //         }
+                    //     }
+                    // }} _ios={{
+                    //     _icon: {
+                    //         size: "md"
+                    //     }
                 }} />
         </Box>;
     };
@@ -80,7 +86,7 @@ export default function AccountsScreen({ navigation, route }) { // route
                 </HStack>
                 <FlatList data={data} renderItem={({
                     item
-                }) => <Pressable key={item.name} onPress={() => console.log("I'm Pressed", item.name)}>
+                }) => <Pressable key={item.name} onPress={() => navigation.navigate('Account Details', { accountName: item.name, accountId: item.id, portfolioId: item.pf.id, accountCurrency: item.currency })}>
                         <Box borderBottomWidth="1" _dark={{
                             borderColor: "gray.600"
                         }} borderColor="coolGray.200" pl="4" pr="5" py="2">
@@ -114,7 +120,7 @@ export default function AccountsScreen({ navigation, route }) { // route
         )
     }
     return (
-        <SafeAreaView style={{paddingBottom: 100}}>
+        <SafeAreaView style={{ paddingBottom: 100 }}>
             {AccountList()}
         </SafeAreaView>
     )

@@ -9,6 +9,8 @@ import HomeScreen from '../screens/Home';
 import AccountsScreen from '../screens/Accounts';
 import SettingsScreen from '../screens/Settings';
 import AddAccountScreen from '../screens/AddAccountScreen';
+import AccountDetailsScreen from '../screens/AccountDetailsScreen';
+import AddValueScreen from '../screens/AddValueScreen';
 
 import { Button, VStack, Box, Text } from "native-base";
 import { signOut, getAuth } from "firebase/auth";
@@ -37,11 +39,16 @@ function AccountStackScreen() {
     <Stack.Navigator
       screenOptions={{
         cardStyle: { backgroundColor: '#fff' },
-        headerShown: false
+        headerShown: false,
+        // headerTitle: "",
       }}>
-      <Stack.Screen name="AccountScreen" component={AccountsScreen} />
+      <Stack.Screen name="Account List" component={AccountsScreen} />
+      <Stack.Screen name="Account Details" component={AccountDetailsScreen} />
       <Stack.Group screenOptions={{ presentation: 'modal' }}>
-        <Stack.Screen name="AddAccountModal" component={AddAccountScreen} />
+        <Stack.Screen name="Add Account" component={AddAccountScreen} />
+      </Stack.Group>
+      <Stack.Group screenOptions={{ presentation: 'modal' }}>
+        <Stack.Screen name="Add Value" component={AddValueScreen} />
       </Stack.Group>
     </Stack.Navigator>
   );

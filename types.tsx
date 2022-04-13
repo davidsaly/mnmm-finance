@@ -10,3 +10,9 @@ export type AccountType = {
     currency: string,
     portfolio: string,
 }
+
+export type ValueType = {
+    amount: number,
+    currency: string,
+    date: string,
+}
