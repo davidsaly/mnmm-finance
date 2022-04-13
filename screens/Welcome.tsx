@@ -26,10 +26,10 @@ const WelcomeScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
             Sign in or sign up to continue!
           </Heading>
           <VStack space={3} mt="5">
-            <Button mt="2" colorScheme="cyan" onPress={() => navigation.navigate('Sign In')}>
+            <Button mt="2" colorScheme="emerald" onPress={() => navigation.navigate('Sign In')}>
               Sign in
             </Button>
-            <Button mt="2" colorScheme="cyan" onPress={() => navigation.navigate('Sign Up')}>
+            <Button mt="2" colorScheme="emerald" onPress={() => navigation.navigate('Sign Up')}>
               Sign up
             </Button>
           </VStack>

@@ -33,7 +33,7 @@ export default function AddAccountScreen({ route, navigation }) {
     });
     async function onSubmit(data: AccountType) {
         await createAccount(data);
-        navigation.navigate('AccountScreen', { accountAdded: data });
+        navigation.navigate('Account List', { accountAdded: data });
     };
 
     async function createAccount(acc: AccountType) {
@@ -52,7 +52,7 @@ export default function AddAccountScreen({ route, navigation }) {
     }
 
     function cancel() {
-        navigation.navigate('AccountScreen', { accountAdded: null });
+        navigation.navigate('Account List', { accountAdded: null });
     }
 
     const portfolioItems = portfolios.map((pf: PortfolioType) => <Select.Item key={pf.id} label={pf.name} value={pf.id} />);
@@ -163,7 +163,7 @@ export default function AddAccountScreen({ route, navigation }) {
                         </FormControl.ErrorMessage>
                     </FormControl>
                     <HStack>
-                        <Button onPress={handleSubmit(onSubmit)} colorScheme="cyan">
+                        <Button onPress={handleSubmit(onSubmit)} colorScheme="emerald">
                             Save
                         </Button>
                         <Spacer />
