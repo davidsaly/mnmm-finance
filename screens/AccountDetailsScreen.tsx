@@ -86,7 +86,7 @@ export default function AccountDetailsScreen({ route, navigation }) {
     return (
         <SafeAreaView style={{ paddingBottom: 100 }}>
             <HStack>
-                <BackButton nav={navigation} screenName="Account List" />
+                <BackButton nav={navigation} screenName="Account List" param={{ valueAdded }} />
                 <Spacer />
                 <Heading fontSize="xl" p="4" pb="3">
                     {accountName}

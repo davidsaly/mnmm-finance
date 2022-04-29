@@ -101,7 +101,7 @@ export default function AddValueScreen({ route, navigation }) {
                         Add Value of {accountName}
                     </Text>
                     <FormControl mb="5" isRequired isInvalid={'amount' in errors}>
-                        <FormControl.Label>Value</FormControl.Label>
+                        <FormControl.Label>Value in {currency}</FormControl.Label>
                         <Controller
                             control={control}
                             render={({ field: { onChange, value } }) => (
@@ -127,42 +127,6 @@ export default function AddValueScreen({ route, navigation }) {
                         <FormControl.HelperText>
                             Value of the account.
                         </FormControl.HelperText>
-                    </FormControl>
-                    <FormControl mb="5" isInvalid={'currency' in errors}>
-                        <FormControl.Label>Currency</FormControl.Label>
-                        <Controller
-                            control={control}
-                            render={({ field: { onChange, value } }) => (
-                                <Select minWidth="200"
-                                    accessibilityLabel="Choose Currency"
-                                    placeholder="Currency"
-                                    _selectedItem={{
-                                        bg: "teal.600",
-                                        endIcon: <CheckIcon size={5} />
-                                    }}
-                                    mt="1"
-                                    selectedValue={currency}
-                                    onValueChange={(itemValue: string) => {
-                                        // onChange(itemValue);
-                                        setCurrency(itemValue);
-                                    }}
-                                >
-                                    <Select.Item label="EUR" value="EUR" />
-                                    <Select.Item label="USD" value="USD" />
-                                    <Select.Item label="CHF" value="CHF" />
-                                    <Select.Item label="GBP" value="GBP" />
-                                </Select>
-                            )}
-                            name="currency"
-                            // rules={{ required: 'Please make a selection' }}
-                            defaultValue={accountCurrency}
-                        />
-                        <FormControl.HelperText>
-                            Currency of the value
-                        </FormControl.HelperText>
-                        <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
-                            {errors.currency?.message}
-                        </FormControl.ErrorMessage>
                     </FormControl>
                     <FormControl mb="5" isInvalid={'date' in errors}>
                         <FormControl.Label>Date</FormControl.Label>

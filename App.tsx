@@ -4,6 +4,12 @@ import './config/firebase';
 import { NativeBaseProvider, extendTheme } from "native-base";
 import RootNavigation from './navigation';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {
+  QueryClient,
+  QueryClientProvider,
+} from 'react-query'
+
+const queryClient = new QueryClient()
 
 export default function () {
   const theme = extendTheme({
@@ -19,7 +25,9 @@ export default function () {
   return (
     <SafeAreaProvider>
       <NativeBaseProvider>
-        <RootNavigation />
+        <QueryClientProvider client={queryClient}>
+          <RootNavigation />
+        </QueryClientProvider>
       </NativeBaseProvider>
     </SafeAreaProvider>
   );

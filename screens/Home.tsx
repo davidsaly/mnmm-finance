@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { auth } from '../utils/hooks/useAuthentication';
 import {
   Box,
@@ -15,21 +15,39 @@ import {
   View,
 } from "native-base";
 import { getFirestore, collection, getDocs, DocumentData } from "firebase/firestore";
-import { getPortfolios } from '../utils/dataCalls';
+import { getData } from '../utils/dataCalls';
+
+import {
+  useQuery,
+} from 'react-query'
 
 const db = getFirestore();
 
-export default function HomeScreen() {
-  const [data, setData] = useState<DocumentData[] | undefined>([]);
-
-  async function setPortfolios() {
-    const docs: DocumentData[] | undefined = await getPortfolios(db, auth);
-    setData(docs);
+export const loadData = () => useQuery('getData', getData, {
+  placeholderData: {
+    docs: [],
+    accs: [],
+    totalValue: 0,
+    currency: '',
   }
+})
+
+export default function HomeScreen({ route }) {
+
+  const { currencyChanged } = route.params || {};
+
+  const { data, refetch } = loadData({
+    placeholderData: {
+      docs: [],
+      accs: [],
+      totalValue: 0,
+      currency: '',
+    }
+  });
 
   useEffect(() => {
-    setPortfolios();
-  }, []);
+    refetch();
+  }, [currencyChanged]);
 
   function pfListBoxes() {
     return (
@@ -45,7 +63,7 @@ export default function HomeScreen() {
         <Heading fontSize="xl" p="4" pb="3">
           Portfolios
         </Heading>
-        <FlatList data={data} renderItem={({
+        <FlatList data={data.docs} renderItem={({
           item
         }) => <Pressable key={item.name} onPress={() => console.log("I'm Pressed", item.name)}>
             <Box borderBottomWidth="1" _dark={{
@@ -66,7 +84,7 @@ export default function HomeScreen() {
                   <Text _dark={{
                     color: "warmGray.50"
                   }} color="coolGray.800" bold fontSize="lg">
-                    5000 USD
+                    {item.value} {data.currency}
                   </Text>
                 </HStack>
                 <HStack>
@@ -79,7 +97,7 @@ export default function HomeScreen() {
                   <Text color="coolGray.600" _dark={{
                     color: "warmGray.200"
                   }}>
-                    0 EUR
+                    0 {data.currency}
                   </Text>
                 </HStack>
                 <HStack>
@@ -102,7 +120,7 @@ export default function HomeScreen() {
     )
   }
 
-  const portfolioList = data.map(d =>
+  const portfolioList = data.docs.map(d =>
     <Pressable key={d.name} onPress={() => console.log("I'm Pressed", d.name)}>
       <Box h="130" w="64" borderWidth="1" borderColor="coolGray.300" shadow="3" bg="coolGray.100" p="5" rounded="8">
         <HStack>
@@ -144,7 +162,7 @@ export default function HomeScreen() {
             Total Value
           </Text>
           <Heading>
-            <Text color="darkBlue.700"> 7500 USD</Text>
+            <Text color="darkBlue.700"> {data.totalValue} {data.currency}</Text>
           </Heading>
         </Container>
         <Divider my="5" />
