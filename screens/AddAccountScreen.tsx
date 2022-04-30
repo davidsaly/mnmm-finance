@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
     Stack,
     Box,
@@ -17,6 +18,7 @@ import { getFirestore, addDoc, collection } from "firebase/firestore";
 import { useForm, Controller } from 'react-hook-form';
 import { AccountType, PortfolioType } from "../types";
 import { Key } from "react";
+import { loadCurrencies } from './Settings';
 
 const auth = getAuth();
 const db = getFirestore();
@@ -51,11 +53,16 @@ export default function AddAccountScreen({ route, navigation }) {
         }
     }
 
+    const { data } = loadCurrencies({
+        placeholderData: []
+    });
+
     function cancel() {
         navigation.navigate('Account List', { accountAdded: null });
     }
 
     const portfolioItems = portfolios.map((pf: PortfolioType) => <Select.Item key={pf.id} label={pf.name} value={pf.id} />);
+    const currencies = data.map((ccy) => <Select.Item key={ccy.code} label={`${ccy.code} ${ccy.description}`} value={ccy.code} />);
 
     return (
         <KeyboardAwareScrollView style={{
@@ -145,10 +152,7 @@ export default function AddAccountScreen({ route, navigation }) {
                                         onChange(itemValue);
                                     }}
                                 >
-                                    <Select.Item label="EUR" value="EUR" />
-                                    <Select.Item label="USD" value="USD" />
-                                    <Select.Item label="CHF" value="CHF" />
-                                    <Select.Item label="GBP" value="GBP" />
+                                    {currencies}
                                 </Select>
                             )}
                             name="currency"

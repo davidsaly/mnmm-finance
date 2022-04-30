@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { auth } from '../utils/hooks/useAuthentication';
 import { getFirestore, DocumentData } from "firebase/firestore";
 import { getPortfolios, getAccounts } from '../utils/dataCalls';
@@ -17,33 +17,32 @@ import {
 } from "native-base";
 import { Entypo } from "@expo/vector-icons";
 import { useIsFocused } from '@react-navigation/native';
+import { loadData } from './Home';
 
 const db = getFirestore();
 
 export default function AccountsScreen({ navigation, route }) { // route
-    const [data, setData] = useState<DocumentData[]>([]);
-    const [portfolios, setPortfolios] = useState<DocumentData[] | undefined>([]);
-    const { accountAdded } = route.params || {};
+    const { accountAdded, valueAdded } = route.params || {};
     const isFocused = useIsFocused();
 
-    async function setAccountsData() {
-        const portfolios: DocumentData[] | undefined = await getPortfolios(db, auth);
-        setPortfolios(portfolios);
-        const accounts = await getAccounts(db, auth, portfolios);
-        setData(accounts);
-    };
+    const { data, refetch } = loadData({
+        placeholderData: {
+            docs: [],
+            accs: [],
+            totalValue: 0
+        }
+    });
+
+    const portfolios = data?.docs;
+
 
     useEffect(() => {
-        isFocused && setAccountsData()
-    }, [isFocused]);
-
-    useEffect(() => {
-        setAccountsData();
-    }, []);
-
-    useEffect(() => {
-        setAccountsData();
+        refetch();
     }, [accountAdded])
+
+    useEffect(() => {
+        refetch();
+    }, [valueAdded])
 
     const AddIcon = () => {
         return <Box alignItems="center">
@@ -84,7 +83,7 @@ export default function AccountsScreen({ navigation, route }) { // route
                     <Spacer />
                     <AddIcon />
                 </HStack>
-                <FlatList data={data} renderItem={({
+                <FlatList data={data.accs} renderItem={({
                     item
                 }) => <Pressable key={item.name} onPress={() => navigation.navigate('Account Details', { accountName: item.name, accountId: item.id, portfolioId: item.pf.id, accountCurrency: item.currency })}>
                         <Box borderBottomWidth="1" _dark={{
@@ -102,6 +101,12 @@ export default function AccountsScreen({ navigation, route }) { // route
                                         color: "warmGray.50"
                                     }} color="coolGray.800" fontSize="md">
                                         {item.value[0].amount} {item.value[0].currency}
+                                    </Text>
+                                    <Spacer />
+                                    <Text _dark={{
+                                        color: "warmGray.50"
+                                    }} color="coolGray.800" fontSize="md">
+                                        {item.valueEur[0].amount} {item.valueEur[0].currency}
                                     </Text>
                                 </HStack>
                                 <HStack>

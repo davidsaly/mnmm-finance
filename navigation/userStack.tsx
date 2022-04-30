@@ -12,11 +12,15 @@ import AddAccountScreen from '../screens/AddAccountScreen';
 import AccountDetailsScreen from '../screens/AccountDetailsScreen';
 import AddValueScreen from '../screens/AddValueScreen';
 
-import { Button, VStack, Box, Text } from "native-base";
+import { Button, VStack, Box, Text, Divider, Pressable, HStack, Icon } from "native-base";
 import { signOut, getAuth } from "firebase/auth";
 import { useAuthentication } from '../utils/hooks/useAuthentication';
+import { AntDesign } from '@expo/vector-icons';
+
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 const auth = getAuth();
+const db = getFirestore();
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
@@ -56,28 +60,28 @@ function AccountStackScreen() {
 
 function HomeBottomTabs() {
   return (
-    <Tab.Navigator screenOptions={{
-      headerShown: false
-    }}>
-      <Tab.Screen
-        name="Home"
-        component={HomeStackScreen}
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
-        }} />
-      <Tab.Screen
-        name="Accounts"
-        component={AccountStackScreen}
-        options={{
-          title: 'Accounts',
-          tabBarIcon: ({ color }) => <TabBarIcon name="list-alt" color={color} />,
-        }} />
-    </Tab.Navigator>
+      <Tab.Navigator screenOptions={{
+        headerShown: false
+      }}>
+        <Tab.Screen
+          name="Home"
+          component={HomeStackScreen}
+          options={{
+            title: 'Home',
+            tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
+          }} />
+        <Tab.Screen
+          name="Accounts"
+          component={AccountStackScreen}
+          options={{
+            title: 'Accounts',
+            tabBarIcon: ({ color }) => <TabBarIcon name="list-alt" color={color} />,
+          }} />
+      </Tab.Navigator>
   )
 }
 
-function CustomDrawerContent({ props }) {
+function CustomDrawerContent({ props, navigation }) {
   const { user } = useAuthentication();
   return (
     <DrawerContentScrollView {...props} safeArea>
@@ -90,6 +94,31 @@ function CustomDrawerContent({ props }) {
             {user?.email}
           </Text>
         </Box>
+
+        <Pressable
+          px="5"
+          py="3"
+          rounded="md"
+          onPress={() => {
+            navigation.navigate("Settings");
+          }}
+        >
+          <HStack space="7" alignItems="center">
+            <Icon
+              color="gray.500"
+              size="5"
+              as={<AntDesign name="setting" />}
+            />
+            <Text
+              fontWeight="500"
+              color="gray.700"
+            >
+              Settings
+            </Text>
+          </HStack>
+        </Pressable>
+
+        <Divider />
         <Button
           variant="link"
           colorScheme="muted"
@@ -110,7 +139,7 @@ export default function UserStack() {
         <Drawer.Screen name="HomeTabs" component={HomeBottomTabs} />
         <Drawer.Screen name="Settings" component={SettingsScreen} />
       </Drawer.Navigator>
-    </NavigationContainer>
+    </NavigationContainer >
   );
 }
 
