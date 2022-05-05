@@ -18,6 +18,7 @@ import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { AntDesign } from '@expo/vector-icons';
 
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import AddTransactionScreen from '../screens/AddTransactionScreen';
 
 const auth = getAuth();
 const db = getFirestore();
@@ -34,6 +35,9 @@ function HomeStackScreen() {
         headerShown: false
       }}>
       <Stack.Screen name="HomeScreen" component={HomeScreen} />
+      <Stack.Group screenOptions={{ presentation: 'modal' }}>
+        <Stack.Screen name="Add Transaction" component={AddTransactionScreen} />
+      </Stack.Group>
     </Stack.Navigator>
   );
 }
@@ -60,24 +64,24 @@ function AccountStackScreen() {
 
 function HomeBottomTabs() {
   return (
-      <Tab.Navigator screenOptions={{
-        headerShown: false
-      }}>
-        <Tab.Screen
-          name="Home"
-          component={HomeStackScreen}
-          options={{
-            title: 'Home',
-            tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
-          }} />
-        <Tab.Screen
-          name="Accounts"
-          component={AccountStackScreen}
-          options={{
-            title: 'Accounts',
-            tabBarIcon: ({ color }) => <TabBarIcon name="list-alt" color={color} />,
-          }} />
-      </Tab.Navigator>
+    <Tab.Navigator screenOptions={{
+      headerShown: false
+    }}>
+      <Tab.Screen
+        name="Home"
+        component={HomeStackScreen}
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
+        }} />
+      <Tab.Screen
+        name="Accounts"
+        component={AccountStackScreen}
+        options={{
+          title: 'Accounts',
+          tabBarIcon: ({ color }) => <TabBarIcon name="list-alt" color={color} />,
+        }} />
+    </Tab.Navigator>
   )
 }
 
