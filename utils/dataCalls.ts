@@ -138,6 +138,23 @@ export async function getLatestAccountValue(db: any, auth: any, pfId: any, accId
     }
 }
 
+export async function getTransactionsForAccount(db: any, auth: any, pfId: any, accId: any) {
+    const user = auth.currentUser;
+    const uid: string = user?.uid.toString() || '';
+    const transactionsRef = collection(db, 'users', uid, 'portfolios', pfId, 'accounts', accId, 'transactions');
+    const q = query(transactionsRef, orderBy('date', 'desc'));
+    try {
+        const values = await getDocs(q);
+        let docs: DocumentData[] = [];
+        values.forEach(doc => {
+            docs = [...docs, { ...doc.data(), ...{ id: doc.id } }];
+        });
+        return docs;
+    } catch (e) {
+        console.error('Error fetching values for account', e);
+    }
+}
+
 export async function loadCurrencyList() {
     console.log('getting currencies');
     const currenciesRef = collection(db, 'currencies');

@@ -32,7 +32,7 @@ export const loadData = () => useQuery('getData', getData, {
   }
 })
 
-export default function HomeScreen({ route }) {
+export default function HomeScreen({ route, navigation }) {
 
   const { currencyChanged } = route.params || {};
 
@@ -167,13 +167,15 @@ export default function HomeScreen({ route }) {
         </Container>
         <Divider my="5" />
         <HStack space={3} justifyContent="center">
-          <Center height={60} w="20" bg="info.50" rounded="md" shadow={3}
-            _text={{
-              color: "blue.900",
-              fontSize: "xs"
-            }} >
-            Add Transaction
-          </Center>
+          <Pressable onPress={() => navigation.navigate('Add Transaction')}>
+            <Center height={60} w="20" bg="info.50" rounded="md" shadow={3}
+              _text={{
+                color: "blue.900",
+                fontSize: "xs"
+              }} >
+              Add Transaction
+            </Center>
+          </Pressable>
           <Center height={60} w="20" bg="light.50" rounded="md" shadow={3}
             _text={{
               color: "emerald.900",
