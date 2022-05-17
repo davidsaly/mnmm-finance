@@ -9,10 +9,13 @@ import {
   Center,
 } from "native-base";
 import { StackScreenProps } from '@react-navigation/stack';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, connectAuthEmulator } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 
 const auth = getAuth();
+
+// to connect to local emulator
+// connectAuthEmulator(auth, "http://localhost:9099");
 const db = getFirestore();
 
 const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
@@ -55,6 +58,7 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
       const docRef = await setDoc(doc(db, 'users', uid), {
         name: email,
         email,
+        currency: 'EUR'
       }, { merge: true });
       console.log('User document written with ID: ', uid);
     } catch (e) {

@@ -35,9 +35,6 @@ function HomeStackScreen() {
         headerShown: false
       }}>
       <Stack.Screen name="HomeScreen" component={HomeScreen} />
-      <Stack.Group screenOptions={{ presentation: 'modal' }}>
-        <Stack.Screen name="Add Transaction" component={AddTransactionScreen} />
-      </Stack.Group>
     </Stack.Navigator>
   );
 }
@@ -57,6 +54,9 @@ function AccountStackScreen() {
       </Stack.Group>
       <Stack.Group screenOptions={{ presentation: 'modal' }}>
         <Stack.Screen name="Add Value" component={AddValueScreen} />
+      </Stack.Group>
+      <Stack.Group screenOptions={{ presentation: 'modal' }}>
+        <Stack.Screen name="Add Transaction" component={AddTransactionScreen} />
       </Stack.Group>
     </Stack.Navigator>
   );

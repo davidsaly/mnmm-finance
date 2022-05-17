@@ -67,7 +67,7 @@ export async function getPortfolios(db: any, auth: any, currency = 'EUR') {
     }
 };
 
-export async function getAccountsForPortfolio(db: any, auth: any, pf: any, currency) {
+export async function getAccountsForPortfolio(db: any, auth: any, pf: any, currency: any) {
     const user = auth.currentUser;
     const uid: string = user?.uid.toString() || '';
     const accountsRef = collection(db, 'users', uid, 'portfolios', pf.id, 'accounts');
@@ -108,7 +108,8 @@ export async function getValuesForAccount(db: any, auth: any, pfId: any, accId: 
     const user = auth.currentUser;
     const uid: string = user?.uid.toString() || '';
     const valuesRef = collection(db, 'users', uid, 'portfolios', pfId, 'accounts', accId, 'values');
-    const q = query(valuesRef, orderBy('date', 'desc'));
+    const q = query(valuesRef, orderBy('date', 'desc'), orderBy('created', 'desc'));
+    // const q = query(valuesRef, orderBy('date', 'desc'));
     try {
         const values = await getDocs(q);
         let docs: DocumentData[] = [];
@@ -125,7 +126,8 @@ export async function getLatestAccountValue(db: any, auth: any, pfId: any, accId
     const user = auth.currentUser;
     const uid: string = user?.uid.toString() || '';
     const valuesRef = collection(db, 'users', uid, 'portfolios', pfId, 'accounts', accId, 'values');
-    const q = query(valuesRef, orderBy('date', 'desc'), limit(1))
+    const q = query(valuesRef, orderBy('date', 'desc'), orderBy('created', 'desc'), limit(1))
+    // const q = query(valuesRef, orderBy('date', 'desc'), limit(1))
     try {
         const values = await getDocs(q);
         let docs: DocumentData[] = [];
@@ -139,6 +141,7 @@ export async function getLatestAccountValue(db: any, auth: any, pfId: any, accId
 }
 
 export async function getTransactionsForAccount(db: any, auth: any, pfId: any, accId: any) {
+    console.log('getting transactions');
     const user = auth.currentUser;
     const uid: string = user?.uid.toString() || '';
     const transactionsRef = collection(db, 'users', uid, 'portfolios', pfId, 'accounts', accId, 'transactions');

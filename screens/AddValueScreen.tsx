@@ -19,7 +19,9 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore, addDoc, collection } from "firebase/firestore";
 import { useForm, Controller } from 'react-hook-form';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { format, formatISO } from 'date-fns'
+import { format, formatISO } from 'date-fns';
+
+import { loadData } from './Home';
 
 const auth = getAuth();
 const db = getFirestore();
@@ -31,6 +33,9 @@ export default function AddValueScreen({ route, navigation }) {
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
     const [date, setDate] = useState<string>();
     const [currency, setCurrency] = useState<string>(accountCurrency);
+    const [saveLabel, setSaveLabel] = useState('Save');
+
+    const { refetch } = loadData();
 
     const showDatePicker = () => {
         setDatePickerVisibility(true);
@@ -62,6 +67,9 @@ export default function AddValueScreen({ route, navigation }) {
     });
     async function onSubmit(data) {
         await createValue(data);
+        setSaveLabel('Saving...');
+        await new Promise(resolve => setTimeout(resolve, 4000));
+        refetch();
         navigation.navigate('Account Details', { valueAdded: data, accountId: account, portfolioId: portfolio, accountName});
     };
 
@@ -76,7 +84,8 @@ export default function AddValueScreen({ route, navigation }) {
             const docRef = await addDoc(collection(db, 'users', uid, 'portfolios', portfolio, 'accounts', account, 'values'), {
                 amount: val.amount,
                 currency,
-                date: formatISO(new Date(date), { representation: 'date' })
+                date: formatISO(new Date(date), { representation: 'date' }),
+                created: formatISO(new Date(), { format: 'basic' }),
             });
             console.log('Created a value with id', docRef.id);
         } catch (e) {
@@ -157,7 +166,7 @@ export default function AddValueScreen({ route, navigation }) {
                     </FormControl>
                     <HStack>
                         <Button onPress={handleSubmit(onSubmit)} colorScheme="emerald">
-                            Save
+                            {saveLabel}
                         </Button>
                         <Spacer />
                         <Button mt="2" variant="unstyled" onPress={cancel}>

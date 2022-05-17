@@ -7,9 +7,11 @@ import {
   Button,
   Center
 } from "native-base";
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, connectAuthEmulator } from 'firebase/auth';
 
 const auth = getAuth();
+// to connect to a local emulator
+// connectAuthEmulator(auth, "http://localhost:9099");
 
 const SignInScreen = () => {
   const [value, setValue] = React.useState({

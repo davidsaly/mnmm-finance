@@ -13,12 +13,14 @@ import { getFirestore, addDoc, collection, doc, updateDoc } from "firebase/fires
 
 const db = getFirestore();
 
-export default function AddTransactionScreen({ navigation }) {
+export default function AddTransactionScreen({ navigation, route }) {
+    const { account, accountCurrency } = route.params;
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
     const [date, setDate] = useState<string>();
     const [txType, setTxType] = useState(false);
-    const [currencyIn, setCurrencyIn] = useState('');
-    const [currencyOut, setCurrencyOut] = useState('');
+    const [currencyIn, setCurrencyIn] = useState(accountCurrency);
+    const [currencyOut, setCurrencyOut] = useState(accountCurrency);
+    const [saveLabel, setSaveLabel] = useState('Save');
 
     const { data, refetch } = loadData({
         placeholderData: {
@@ -54,15 +56,18 @@ export default function AddTransactionScreen({ navigation }) {
     const { control, handleSubmit, formState: { errors } } = useForm({
         defaultValues: {
             transactionType: '',
-            accountIn: '',
-            accountOut: '',
-            currencyIn: '',
-            currencyOut: '',
+            accountIn: account,
+            accountOut: account,
+            currencyIn: accountCurrency,
+            currencyOut: accountCurrency,
         }
     });
     async function onSubmit(data) {
         await createTransaction(data);
-        navigation.navigate('HomeScreen');
+        setSaveLabel('Saving...');
+        await new Promise(resolve => setTimeout(resolve, 4000));
+        refetch();
+        navigation.goBack();
     };
 
     function cancel() {
@@ -106,13 +111,15 @@ export default function AddTransactionScreen({ navigation }) {
             date: formatISO(new Date(date), { representation: 'date' }),
             flow: '+',
             type: txType,
+            created: formatISO(new Date(), { format: 'basic' }),
         };
         const docOut = {
-            amount: transaction.amountOut,
+            amount: `-${transaction.amountOut}`,
             currency: currencyOut,
             date: formatISO(new Date(date), { representation: 'date' }),
             flow: '-',
             type: txType,
+            created: formatISO(new Date(), { format: 'basic' }),
         }
         if (txType === 'Inflow' || txType === 'Transfer') {
             try {
@@ -373,7 +380,7 @@ export default function AddTransactionScreen({ navigation }) {
                     </FormControl>
                     <HStack>
                         <Button onPress={handleSubmit(onSubmit)} colorScheme="emerald">
-                            Save
+                            {saveLabel}
                         </Button>
                         <Spacer />
                         <Button mt="2" variant="unstyled" onPress={cancel}>
