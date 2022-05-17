@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { DocumentData } from "firebase/firestore";
+import { DocumentData, collection, query, orderBy, onSnapshot, QuerySnapshot } from "firebase/firestore";
 import { auth } from '../utils/hooks/useAuthentication';
 import { db } from '../config/firebase';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +20,8 @@ import {
 import BackButton from '../components/backButton';
 import { getValuesForAccount, getTransactionsForAccount } from '../utils/dataCalls';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { loadTransactions } from '../utils/dataCallsSeries';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function AccountDetailsScreen({ route, navigation }) {
     const [showType, setShowType] = useState("Values");
@@ -27,6 +29,18 @@ export default function AccountDetailsScreen({ route, navigation }) {
     const [transactions, setTransactions] = useState<DocumentData[]>([]);
     const [ccy, setCcy] = useState();
     const { accountName, accountId, portfolioId, accountCurrency, valueAdded } = route.params;
+
+    const { data, refetch } = loadTransactions({
+        placeholderData: {
+            docs: [],
+            accs: [],
+            totalValue: 0
+        },
+        variables: {
+            pfId: portfolioId,
+            accId: accountId,
+        }
+    });
 
     async function setValuesData() {
         const valuesData = await getValuesForAccount(db, auth, portfolioId, accountId);
@@ -42,15 +56,22 @@ export default function AccountDetailsScreen({ route, navigation }) {
         navigation.navigate('Add Value', { portfolio: portfolioId, account: accountId, accountName, accountCurrency: ccy })
     }
 
+    function addTransaction() {
+        navigation.navigate('Add Transaction', { account: accountName, accountCurrency: ccy })
+    }
+
     useEffect(() => {
         setValuesData();
-        setTransactionsData();
         setCcy(accountCurrency);
     }, []);
 
     useEffect(() => {
         setValuesData();
     }, [valueAdded])
+
+    useFocusEffect(React.useCallback(() => {
+        refetch();
+    }, []));
 
     function valueList() {
         return (
@@ -101,8 +122,12 @@ export default function AccountDetailsScreen({ route, navigation }) {
                     <Heading fontSize="lg" p="4" pb="3">
                         Transactions
                     </Heading>
+                    <Spacer />
+                    <Button mt="2" colorScheme="emerald" variant="link" onPress={addTransaction}>
+                        Add transaction
+                    </Button>
                 </HStack>
-                <FlatList data={transactions} renderItem={({
+                <FlatList data={data} renderItem={({
                     item
                 }) => <Pressable key={item.id} onPress={() => console.log('Pressed transaction')}>
                         <Box borderBottomWidth="1" _dark={{
@@ -122,7 +147,7 @@ export default function AccountDetailsScreen({ route, navigation }) {
                                     </Text>
                                     <Spacer />
                                     <Text mt="2" fontSize="sm" color="coolGray.700">
-                                        {item.flow} {item.amount} {item.currency}
+                                        {item.amount} {item.currency}
                                     </Text>
                                 </HStack>
                             </VStack>

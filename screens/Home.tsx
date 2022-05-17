@@ -15,7 +15,8 @@ import {
   View,
 } from "native-base";
 import { getFirestore, collection, getDocs, DocumentData } from "firebase/firestore";
-import { getData } from '../utils/dataCalls';
+import { getData } from '../utils/dataCallsSeries';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   useQuery,
@@ -60,9 +61,9 @@ export default function HomeScreen({ route, navigation }) {
   function pfList() {
     return (
       <Box>
-        <Heading fontSize="xl" p="4" pb="3">
+        {/* <Heading fontSize="xl" p="4" pb="3">
           Portfolios
-        </Heading>
+        </Heading> */}
         <FlatList data={data.docs} renderItem={({
           item
         }) => <Pressable key={item.name} onPress={() => console.log("I'm Pressed", item.name)}>
@@ -91,16 +92,29 @@ export default function HomeScreen({ route, navigation }) {
                   <Text color="coolGray.600" _dark={{
                     color: "warmGray.200"
                   }}>
-                    Profit/Loss
+                    {item.type === 'nonperforming' ? 'Income' : 'Inflows'}
                   </Text>
                   <Spacer />
                   <Text color="coolGray.600" _dark={{
                     color: "warmGray.200"
                   }}>
-                    0 {data.currency}
+                    {item.type === 'nonperforming' ? item.income : item.inflows} {data.currency}
                   </Text>
                 </HStack>
                 <HStack>
+                  <Text color="coolGray.600" _dark={{
+                    color: "warmGray.200"
+                  }}>
+                    {item.type === 'nonperforming' ? 'Spending' : 'Outflows'}
+                  </Text>
+                  <Spacer />
+                  <Text color="coolGray.600" _dark={{
+                    color: "warmGray.200"
+                  }}>
+                    {item.type === 'nonperforming' ? item.spending : item.outflows} {data.currency}
+                  </Text>
+                </HStack>
+                {item.type === 'performing' && <HStack>
                   <Text color="coolGray.600" _dark={{
                     color: "warmGray.200"
                   }}>
@@ -110,9 +124,22 @@ export default function HomeScreen({ route, navigation }) {
                   <Text color="coolGray.600" _dark={{
                     color: "warmGray.200"
                   }}>
-                    0%
+                    {item.performance} {'%'}
                   </Text>
-                </HStack>
+                </HStack>}
+                {item.type === 'performing' && <HStack>
+                  <Text color="coolGray.600" _dark={{
+                    color: "warmGray.200"
+                  }}>
+                    Profit/Loss
+                  </Text>
+                  <Spacer />
+                  <Text color="coolGray.600" _dark={{
+                    color: "warmGray.200"
+                  }}>
+                    {item.pl} {data.currency}
+                  </Text>
+                </HStack>}
               </VStack>
             </Box>
           </Pressable>} keyExtractor={item => item.id} />
@@ -155,39 +182,44 @@ export default function HomeScreen({ route, navigation }) {
   );
 
   return (
-    <View>
-      <Center safeArea>
-        <Container centerContent={false}>
-          <Text mt="3" fontWeight="medium">
-            Total Value
-          </Text>
-          <Heading>
-            <Text color="darkBlue.700"> {data.totalValue} {data.currency}</Text>
-          </Heading>
-        </Container>
-        <Divider my="5" />
-        <HStack space={3} justifyContent="center">
-          <Pressable onPress={() => navigation.navigate('Add Transaction')}>
-            <Center height={60} w="20" bg="info.50" rounded="md" shadow={3}
-              _text={{
-                color: "blue.900",
-                fontSize: "xs"
-              }} >
-              Add Transaction
-            </Center>
-          </Pressable>
+    <SafeAreaView>
+      <Box>
+        <Text pl="3" pt="5">My Net Worth:</Text>
+        <Heading fontSize="3xl" pl="3" pb="0">
+          <Text color="emerald.700">{data.totalValue} {data.currency}</Text>
+        </Heading>
+      </Box>
+      <Divider my="3" />
+      <HStack space={3} pl ="3">
+        <Pressable onPress={() => navigation.navigate('Add Transaction', { account: '', accountCurrency: '' })}>
           <Center height={60} w="20" bg="light.50" rounded="md" shadow={3}
             _text={{
-              color: "emerald.900",
+              color: "emerald.700",
               fontSize: "xs"
             }} >
-            Add Value
+            Add Transaction
           </Center>
-        </HStack>
-        <Divider my="5" />
-        {/* {pfListBoxes()} */}
-      </Center>
+        </Pressable>
+        <Center height={60} w="20" bg="light.50" rounded="md" shadow={3}
+          _text={{
+            color: "emerald.700",
+            fontSize: "xs"
+          }} >
+          Add Value
+        </Center>
+        <Pressable onPress={() => refetch()}>
+          <Center height={60} w="20" bg="light.50" rounded="md" shadow={3}
+            _text={{
+              color: "emerald.700",
+              fontSize: "xs"
+            }} >
+            Reload data
+          </Center>
+        </Pressable>
+      </HStack>
+      <Divider my="3" />
+      {/* {pfListBoxes()} */}
       {pfList()}
-    </View>
+    </SafeAreaView>
   );
 }

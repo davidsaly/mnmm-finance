@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { auth } from '../utils/hooks/useAuthentication';
-import { getFirestore, DocumentData } from "firebase/firestore";
-import { getPortfolios, getAccounts } from '../utils/dataCalls';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
     Box,
@@ -18,8 +16,6 @@ import {
 import { Entypo } from "@expo/vector-icons";
 import { useIsFocused } from '@react-navigation/native';
 import { loadData } from './Home';
-
-const db = getFirestore();
 
 export default function AccountsScreen({ navigation, route }) { // route
     const { accountAdded, valueAdded } = route.params || {};
@@ -93,29 +89,92 @@ export default function AccountsScreen({ navigation, route }) { // route
                                 <HStack>
                                     <Text _dark={{
                                         color: "warmGray.50"
-                                    }} color="coolGray.800" bold>
+                                    }} color="coolGray.800" bold fontSize="md">
                                         {item.name}
                                     </Text>
                                     <Spacer />
                                     <Text _dark={{
                                         color: "warmGray.50"
-                                    }} color="coolGray.800" fontSize="md">
+                                    }} color="coolGray.800" fontSize="sm">
                                         {item.value[0].amount} {item.value[0].currency}
                                     </Text>
                                     <Spacer />
                                     <Text _dark={{
                                         color: "warmGray.50"
-                                    }} color="coolGray.800" fontSize="md">
-                                        {item.valueEur[0].amount} {item.valueEur[0].currency}
+                                    }} color="coolGray.800" fontSize="lg" bold>
+                                        {item.valueBase[0].amount} {item.valueBase[0].currency}
                                     </Text>
                                 </HStack>
                                 <HStack>
-                                    <Text mt="2" fontSize="xs" color="coolGray.700">
+                                    <Text mt="1" fontSize="xs" color="coolGray.700">
                                         Portfolio:
                                     </Text>
                                     <Spacer />
-                                    <Text mt="2" fontSize="sm" color="coolGray.700">
+                                    <Text mt="1" fontSize="sm" color="coolGray.700">
                                         {item.pf.name}
+                                    </Text>
+                                </HStack>
+                                {item.pfType === 'nonperforming' && <HStack>
+                                    <Text mt="1" fontSize="xs" color="coolGray.700">
+                                        Income:
+                                    </Text>
+                                    <Spacer />
+                                    <Text mt="1" fontSize="sm" color="coolGray.700">
+                                        {item.income} {item.valueBase[0].currency}
+                                    </Text>
+                                </HStack>}
+                                {item.pfType === 'nonperforming' && <HStack>
+                                    <Text mt="1" fontSize="xs" color="coolGray.700">
+                                        Spending:
+                                    </Text>
+                                    <Spacer />
+                                    <Text mt="1" fontSize="sm" color="coolGray.700">
+                                        {item.spending} {item.valueBase[0].currency}
+                                    </Text>
+                                </HStack>}
+                                {item.pfType === 'performing' && <HStack>
+                                    <Text mt="1" fontSize="xs" color="coolGray.700">
+                                        Inflows:
+                                    </Text>
+                                    <Spacer />
+                                    <Text mt="1" fontSize="sm" color="coolGray.700">
+                                        {item.inflows} {item.valueBase[0].currency}
+                                    </Text>
+                                </HStack>}
+                                {item.pfType === 'performing' && <HStack>
+                                    <Text mt="1" fontSize="xs" color="coolGray.700">
+                                        Outflows:
+                                    </Text>
+                                    <Spacer />
+                                    <Text mt="1" fontSize="sm" color="coolGray.700">
+                                        {item.outflows} {item.valueBase[0].currency}
+                                    </Text>
+                                </HStack>}
+                                {item.pfType === 'performing' && <HStack>
+                                    <Text mt="1" fontSize="xs" color="coolGray.700">
+                                        Performance:
+                                    </Text>
+                                    <Spacer />
+                                    <Text mt="2" fontSize="sm" color="coolGray.700">
+                                        {item.performance} {'%'}
+                                    </Text>
+                                </HStack>}
+                                {item.pfType === 'performing' && <HStack>
+                                    <Text mt="1" fontSize="xs" color="coolGray.700">
+                                        Profit/Loss:
+                                    </Text>
+                                    <Spacer />
+                                    <Text mt="1" fontSize="sm" color="coolGray.700">
+                                        {item.pl} {item.valueBase[0].currency}
+                                    </Text>
+                                </HStack>}
+                                <HStack>
+                                    <Text mt="1" fontSize="xs" color="coolGray.700">
+                                        Last update:
+                                    </Text>
+                                    <Spacer />
+                                    <Text mt="1" fontSize="sm" color="coolGray.700">
+                                        {item.date}
                                     </Text>
                                 </HStack>
                             </VStack>
