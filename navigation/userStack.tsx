@@ -65,7 +65,8 @@ function AccountStackScreen() {
 function HomeBottomTabs() {
   return (
     <Tab.Navigator screenOptions={{
-      headerShown: false
+      headerShown: false,
+      tabBarActiveTintColor: "#047857",
     }}>
       <Tab.Screen
         name="Home"

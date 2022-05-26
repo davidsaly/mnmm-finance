@@ -5,7 +5,7 @@ import { auth } from '../utils/hooks/useAuthentication';
 import {
     useQuery,
 } from 'react-query'
-import { get } from 'lodash';
+import { get, reverse, reduce, forOwn, set } from 'lodash';
 
 const db = getFirestore();
 
@@ -39,15 +39,18 @@ export async function getData() {
         // portfolio series and accounts
         for (let index = 0; index < docs.length; index++) {
             const pf = docs[index];
-            const pfSeries = await getLatestPortfolioSeries(db, auth, docs[index].id);
+            const pfSeries = await getLatestPortfolioSeries(db, auth, docs[index].id, pf.type);
             const accounts = await getAccountsForPortfolio(db, auth, docs[index], currency, pf.type);
             pf.value = round(get(pfSeries, `[0].amount[${currency}]`, 0), 0);
+            pf.date = get(pfSeries, `[0].date`);
             if (pf.type === 'nonperforming') {
                 pf.income = round(get(pfSeries, `[0].income[${currency}]`, 0), 0)
                 pf.spending = round(get(pfSeries, `[0].spending[${currency}]`, 0), 0)
             } else if (pf.type === 'performing') {
                 pf.inflows = round(get(pfSeries, `[0].inflows.index[${currency}]`, 0), 0)
                 pf.outflows = round(get(pfSeries, `[0].outflows.index[${currency}]`, 0), 0)
+                pf.invested = round(get(pfSeries, `[0].invested[${currency}]`, 0), 0)
+                pf.pl = round(get(pfSeries, `[0].pl[${currency}]`, 0), 0)
                 const startPerformance = 100
                 pf.performance = round(
                     multiply(
@@ -57,8 +60,17 @@ export async function getData() {
                                 startPerformance),
                             1),
                         100), 2);
-                pf.pl = subtract(pf.value, add(pf.inflows, pf.outflows));
             }
+            pf.series = [];
+            pf.series.push(pfSeries[0]);
+            // only take the last entry from the date
+            reduce(pfSeries, (prev, cur) => {
+                if (cur.date !== prev.date) {
+                    pf.series.push(cur)
+                };
+                return cur;
+            }, pfSeries[0]);
+            pf.series = reverse(pf.series);
             totalValue = add(totalValue, pf.value);
             accs = [...accs, ...accounts];
         }
@@ -82,8 +94,8 @@ export async function getAccountsForPortfolio(db: any, auth: any, pf: any, curre
             const acc = docs[index];
             const series = await getLatestAccountSeries(db, auth, acc.pf.id, acc.id);
             acc.pfType = pfType;
-            acc.value = [{ amount: round(get(series,`[0].amount[${acc.currency}]`, 0), 2), currency: acc.currency }];
-            acc.valueBase = [{ amount: round(get(series,`[0].amount[${currency}]`, 0), 2), currency }];
+            acc.value = [{ amount: round(get(series, `[0].amount[${acc.currency}]`, 0), 2), currency: acc.currency }];
+            acc.valueBase = [{ amount: round(get(series, `[0].amount[${currency}]`, 0), 2), currency }];
             if (pfType === 'nonperforming') {
                 acc.income = round(get(series, `[0].income[${currency}]`, 0), 0)
                 acc.spending = round(get(series, `[0].spending[${currency}]`, 0), 0)
@@ -99,9 +111,9 @@ export async function getAccountsForPortfolio(db: any, auth: any, pf: any, curre
                                 startPerformance),
                             1),
                         100), 2);
-                acc.pl = round(subtract(acc.valueBase[0].amount, add(acc.inflows, acc.outflows)),0);
+                acc.pl = round(subtract(acc.valueBase[0].amount, add(acc.inflows, acc.outflows)), 0);
             }
-            acc.date = get(series,`[0].date`, 'na');
+            acc.date = get(series, `[0].date`, 'na');
         }
         return docs;
     } catch (e) {
@@ -154,17 +166,31 @@ export async function getLatestAccountSeries(db: any, auth: any, pfId: any, accI
     }
 }
 
-export async function getLatestPortfolioSeries(db: any, auth: any, pfId: any) {
+export async function getLatestPortfolioSeries(db: any, auth: any, pfId: any, pfType: any) {
     const user = auth.currentUser;
     const uid: string = user?.uid.toString() || '';
     const seriesRef = collection(db, 'users', uid, 'portfolios', pfId, 'series');
-    const q = query(seriesRef, orderBy('date', 'desc'), orderBy('created', 'desc'), limit(1))
+    const q = query(seriesRef, orderBy('date', 'desc'), orderBy('created', 'desc')) // , limit(15)
     // const q = query(seriesRef, orderBy('date', 'desc'), limit(1))
     try {
         const series = await getDocs(q);
         let docs: DocumentData[] = [];
         series.forEach(doc => {
-            docs = [...docs, { ...doc.data(), ...{ id: doc.id } }];
+            const data = doc.data();
+            if (pfType === 'performing') {
+                // calculate invested
+                forOwn(data.inflows.index, (value, key) => {
+                    const invested = subtract(value, get(data, `outflows.index.${key}`, 0))
+                    set(data, `invested.${key}`, invested);
+                })
+                // calculate pl
+                forOwn(data.amount, (value, key) => {
+                    const pl = subtract(value, add(get(data, `inflows.index.${key}`, 0), get(data, `outflows.index.${key}`, 0)))
+                    set(data, `pl.${key}`, pl);
+                })
+            }
+            docs = [...docs, { ...data, ...{ id: doc.id } }];
+
         });
         return docs;
     } catch (e) {
