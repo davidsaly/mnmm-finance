@@ -105,7 +105,7 @@ export default function AccountsScreen({ navigation, route }) { // route
                                         {item.valueBase[0].amount} {item.valueBase[0].currency}
                                     </Text>
                                 </HStack>
-                                <HStack>
+                                <HStack pl='3'>
                                     <Text mt="1" fontSize="xs" color="coolGray.700">
                                         Portfolio:
                                     </Text>
@@ -114,7 +114,7 @@ export default function AccountsScreen({ navigation, route }) { // route
                                         {item.pf.name}
                                     </Text>
                                 </HStack>
-                                {item.pfType === 'nonperforming' && <HStack>
+                                {item.pfType === 'nonperforming' && <HStack pl='3'>
                                     <Text mt="1" fontSize="xs" color="coolGray.700">
                                         Income:
                                     </Text>
@@ -123,7 +123,7 @@ export default function AccountsScreen({ navigation, route }) { // route
                                         {item.income} {item.valueBase[0].currency}
                                     </Text>
                                 </HStack>}
-                                {item.pfType === 'nonperforming' && <HStack>
+                                {item.pfType === 'nonperforming' && <HStack pl='3'>
                                     <Text mt="1" fontSize="xs" color="coolGray.700">
                                         Spending:
                                     </Text>
@@ -132,7 +132,7 @@ export default function AccountsScreen({ navigation, route }) { // route
                                         {item.spending} {item.valueBase[0].currency}
                                     </Text>
                                 </HStack>}
-                                {item.pfType === 'performing' && <HStack>
+                                {item.pfType === 'performing' && <HStack pl='3'>
                                     <Text mt="1" fontSize="xs" color="coolGray.700">
                                         Inflows:
                                     </Text>
@@ -141,7 +141,7 @@ export default function AccountsScreen({ navigation, route }) { // route
                                         {item.inflows} {item.valueBase[0].currency}
                                     </Text>
                                 </HStack>}
-                                {item.pfType === 'performing' && <HStack>
+                                {item.pfType === 'performing' && <HStack pl='3'>
                                     <Text mt="1" fontSize="xs" color="coolGray.700">
                                         Outflows:
                                     </Text>
@@ -150,7 +150,7 @@ export default function AccountsScreen({ navigation, route }) { // route
                                         {item.outflows} {item.valueBase[0].currency}
                                     </Text>
                                 </HStack>}
-                                {item.pfType === 'performing' && <HStack>
+                                {item.pfType === 'performing' && <HStack pl='3'>
                                     <Text mt="1" fontSize="xs" color="coolGray.700">
                                         Performance:
                                     </Text>
@@ -159,7 +159,7 @@ export default function AccountsScreen({ navigation, route }) { // route
                                         {item.performance} {'%'}
                                     </Text>
                                 </HStack>}
-                                {item.pfType === 'performing' && <HStack>
+                                {item.pfType === 'performing' && <HStack pl='3'>
                                     <Text mt="1" fontSize="xs" color="coolGray.700">
                                         Profit/Loss:
                                     </Text>
@@ -168,7 +168,7 @@ export default function AccountsScreen({ navigation, route }) { // route
                                         {item.pl} {item.valueBase[0].currency}
                                     </Text>
                                 </HStack>}
-                                <HStack>
+                                <HStack pl='3'>
                                     <Text mt="1" fontSize="xs" color="coolGray.700">
                                         Last update:
                                     </Text>
