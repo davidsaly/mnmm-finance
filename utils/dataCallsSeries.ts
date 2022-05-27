@@ -62,7 +62,9 @@ export async function getData() {
                         100), 2);
             }
             pf.series = [];
-            pf.series.push(pfSeries[0]);
+            if (pfSeries[0]) {
+                pf.series.push(pfSeries[0]);
+            }
             // only take the last entry from the date
             reduce(pfSeries, (prev, cur) => {
                 if (cur.date !== prev.date) {
