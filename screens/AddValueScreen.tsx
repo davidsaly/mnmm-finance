@@ -66,10 +66,8 @@ export default function AddValueScreen({ route, navigation }) {
         }
     });
     async function onSubmit(data) {
-        await createValue(data);
         setSaveLabel('Saving...');
-        await new Promise(resolve => setTimeout(resolve, 4000));
-        refetch();
+        await createValue(data);
         navigation.navigate('Account Details', { valueAdded: data, accountId: account, portfolioId: portfolio, accountName});
     };
 
@@ -118,6 +116,7 @@ export default function AddValueScreen({ route, navigation }) {
                                     placeholder="Amount"
                                     onChangeText={onChange}
                                     value={value}
+                                    keyboardType="number-pad"
                                 />
                             )}
                             name="amount"

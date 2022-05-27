@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import {  get, merge, findIndex, isUndefined } from 'lodash';
+import { get, merge, findIndex, isUndefined } from 'lodash';
 import { subtract, min, max, round, divide, multiply, larger } from 'mathjs';
 import {
   Box,
@@ -16,16 +16,20 @@ import {
   View,
   Flex,
   Button,
+  Badge,
+  Alert,
 } from "native-base";
-import { getFirestore, collection, getDocs, DocumentData } from "firebase/firestore";
+import { getFirestore, collection, getDocs, DocumentData, onSnapshot, doc } from "firebase/firestore";
 import { getData } from '../utils/dataCallsSeries';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Line, VictoryAxis, VictoryBar, VictoryChart, VictoryGroup, VictoryLabel, VictoryLine, VictoryTheme, VictoryTooltip, VictoryVoronoiContainer } from "victory-native";
+import { auth } from '../utils/hooks/useAuthentication';
 
 import {
   useQuery,
 } from 'react-query'
 import { Dimensions } from 'react-native';
+import { formatISO } from 'date-fns';
 
 const db = getFirestore();
 
@@ -43,6 +47,7 @@ export default function HomeScreen({ route, navigation }) {
   const chartWidth = Dimensions.get('window').width;
 
   const { currencyChanged } = route.params || {};
+  const [calculating, setCalculating] = useState(false);
   const [cashDataX, setCashDataX] = useState();
   const [investmentDataX, setInvestmentDataX] = useState();
   const [cashDataY, setCashDataY] = useState({
@@ -162,146 +167,166 @@ export default function HomeScreen({ route, navigation }) {
   const handleCashDateChange = (date: string, pfId: string) => {
     const ind = findIndex(data?.docs, pf => pf.id === pfId);
     const pf = data?.docs[ind];
-    const latestSeries = pf.series[pf.series.length - 1];
-    const latestSeriesDate = latestSeries.date;
-    const dataLength = pf.series.length;
-    if (latestSeriesDate === date) {
-      setCashTimeFrame('latest');
-      handleTextAnchor(dataLength, dataLength);
-      return;
+    if (pf.series.length) {
+      const latestSeries = pf.series[pf.series.length - 1];
+      const latestSeriesDate = latestSeries.date;
+      const dataLength = pf.series.length;
+      if (latestSeriesDate === date) {
+        setCashTimeFrame('latest');
+        handleTextAnchor(dataLength, dataLength);
+        return;
+      }
+      const seriesFromDateInd = findIndex(pf.series, s => s.date === date);
+      const seriesFromDate = pf.series[seriesFromDateInd];
+      // label
+      const anchor = handleTextAnchor(dataLength, seriesFromDateInd);
+      setCashLabelAnchor(anchor);
+      // amount
+      const amountSince = subtract(get(latestSeries, `amount.${data.currency}`, 0), get(seriesFromDate, `amount.${data.currency}`, 0)).toString();
+      const amountAsOf = get(seriesFromDate, `amount.${data.currency}`, 0);
+      // income
+      const incomeSince = subtract(get(latestSeries, `income.${data.currency}`, 0), get(seriesFromDate, `income.${data.currency}`, 0)).toString();
+      const incomeAsOf = get(seriesFromDate, `income.${data.currency}`, 0);
+      // spending
+      const spendingSince = subtract(get(latestSeries, `spending.${data.currency}`, 0), get(seriesFromDate, `spending.${data.currency}`, 0)).toString();
+      const spendingAsOf = get(seriesFromDate, `spending.${data.currency}`, 0);
+      setCashDataY(merge(cashDataY,
+        {
+          amount: {
+            latest: undefined,
+            asof: round(amountAsOf, 0),
+            since: round(amountSince, 0),
+          },
+          income: {
+            latest: undefined,
+            asof: round(incomeAsOf, 0),
+            since: round(incomeSince, 0),
+          },
+          spending: {
+            latest: undefined,
+            asof: round(spendingAsOf, 0),
+            since: round(spendingSince, 0),
+          }
+        }));
+      setCashDate(date);
+      const newTimeFrame = cashTimeFrame === 'latest' ? 'asof' : cashTimeFrame;
+      setCashTimeFrame(newTimeFrame);
     }
-    const seriesFromDateInd = findIndex(pf.series, s => s.date === date);
-    const seriesFromDate = pf.series[seriesFromDateInd];
-    // label
-    const anchor = handleTextAnchor(dataLength, seriesFromDateInd);
-    setCashLabelAnchor(anchor);
-    // amount
-    const amountSince = subtract(get(latestSeries, `amount.${data.currency}`, 0), get(seriesFromDate, `amount.${data.currency}`, 0)).toString();
-    const amountAsOf = get(seriesFromDate, `amount.${data.currency}`, 0);
-    // income
-    const incomeSince = subtract(get(latestSeries, `income.${data.currency}`, 0), get(seriesFromDate, `income.${data.currency}`, 0)).toString();
-    const incomeAsOf = get(seriesFromDate, `income.${data.currency}`, 0);
-    // spending
-    const spendingSince = subtract(get(latestSeries, `spending.${data.currency}`, 0), get(seriesFromDate, `spending.${data.currency}`, 0)).toString();
-    const spendingAsOf = get(seriesFromDate, `spending.${data.currency}`, 0);
-    setCashDataY(merge(cashDataY,
-      {
-        amount: {
-          latest: undefined,
-          asof: round(amountAsOf, 0),
-          since: round(amountSince, 0),
-        },
-        income: {
-          latest: undefined,
-          asof: round(incomeAsOf, 0),
-          since: round(incomeSince, 0),
-        },
-        spending: {
-          latest: undefined,
-          asof: round(spendingAsOf, 0),
-          since: round(spendingSince, 0),
-        }
-      }));
-    setCashDate(date);
-    const newTimeFrame = cashTimeFrame === 'latest' ? 'asof' : cashTimeFrame;
-    setCashTimeFrame(newTimeFrame);
   }
 
   const handleInvestmentDateChange = (date, pfId) => {
     // amount -> amount
     const ind = findIndex(data?.docs, pf => pf.id === pfId);
     const pf = data?.docs[ind];
-    const latestSeries = pf.series[pf.series.length - 1];
-    const latestSeriesDate = latestSeries.date;
-    const dataLength = pf.series.length;
-    if (latestSeriesDate === date) {
-      const anchor = handleTextAnchor(dataLength, dataLength)
+    if (pf.series.length) {
+      const latestSeries = pf.series[pf.series.length - 1];
+      const latestSeriesDate = latestSeries.date;
+      const dataLength = pf.series.length;
+      if (latestSeriesDate === date) {
+        const anchor = handleTextAnchor(dataLength, dataLength)
+        setInvestmentLabelAnchor(anchor);
+        setInvestmentTimeFrame('latest')
+        return;
+      }
+      const seriesFromDateInd = findIndex(pf.series, s => s.date === date);
+      const seriesFromDate = pf.series[seriesFromDateInd];
+      // label
+      const anchor = handleTextAnchor(dataLength, seriesFromDateInd);
       setInvestmentLabelAnchor(anchor);
-      setInvestmentTimeFrame('latest')
-      return;
-    }
-    const seriesFromDateInd = findIndex(pf.series, s => s.date === date);
-    const seriesFromDate = pf.series[seriesFromDateInd];
-    // label
-    const anchor = handleTextAnchor(dataLength, seriesFromDateInd);
-    setInvestmentLabelAnchor(anchor);
-    // amount 
-    const amountSince = subtract(get(latestSeries, `amount.${data.currency}`, 0), get(seriesFromDate, `amount.${data.currency}`, 0)).toString();
-    const amountAsOf = get(seriesFromDate, `amount.${data.currency}`, 0);
-    // inflows 
-    const inflowsSince = subtract(get(latestSeries, `inflows.index.${data.currency}`, 0), get(seriesFromDate, `inflows.index.${data.currency}`, 0)).toString();
-    const inflowsAsOf = get(seriesFromDate, `inflows.index.${data.currency}`, 0);
-    // outflows
-    const outflowsSince = subtract(get(latestSeries, `outflows.index.${data.currency}`, 0), get(seriesFromDate, `outflows.index.${data.currency}`, 0)).toString();
-    const outflowsAsOf = get(seriesFromDate, `outflows.index.${data.currency}`, 0);
-    // invested 
-    const investedSince = subtract(get(latestSeries, `invested.${data.currency}`, 0), get(seriesFromDate, `invested.${data.currency}`, 0)).toString();
-    const investedAsOf = get(seriesFromDate, `invested.${data.currency}`, 0);
-    // performance -> performance
-    const performanceSince = round(
-      multiply(
-        subtract(
-          divide(
-            get(latestSeries, `performance.${data.currency}`),
-            get(seriesFromDate, `performance.${data.currency}`)),
-          1),
-        100),
-      2);
-    const performanceAsOf = round(
-      multiply(
-        subtract(
-          divide(
-            get(seriesFromDate, `performance.${data.currency}`),
-            100),
-          1),
-        100),
-      2);
-    // pl
-    const plSince = subtract(get(latestSeries, `pl.${data.currency}`, 0), get(seriesFromDate, `pl.${data.currency}`, 0)).toString();
-    const plAsOf = get(seriesFromDate, `pl.${data.currency}`, 0);
+      // amount 
+      const amountSince = subtract(get(latestSeries, `amount.${data.currency}`, 0), get(seriesFromDate, `amount.${data.currency}`, 0)).toString();
+      const amountAsOf = get(seriesFromDate, `amount.${data.currency}`, 0);
+      // inflows 
+      const inflowsSince = subtract(get(latestSeries, `inflows.index.${data.currency}`, 0), get(seriesFromDate, `inflows.index.${data.currency}`, 0)).toString();
+      const inflowsAsOf = get(seriesFromDate, `inflows.index.${data.currency}`, 0);
+      // outflows
+      const outflowsSince = subtract(get(latestSeries, `outflows.index.${data.currency}`, 0), get(seriesFromDate, `outflows.index.${data.currency}`, 0)).toString();
+      const outflowsAsOf = get(seriesFromDate, `outflows.index.${data.currency}`, 0);
+      // invested 
+      const investedSince = subtract(get(latestSeries, `invested.${data.currency}`, 0), get(seriesFromDate, `invested.${data.currency}`, 0)).toString();
+      const investedAsOf = get(seriesFromDate, `invested.${data.currency}`, 0);
+      // performance -> performance
+      const performanceSince = round(
+        multiply(
+          subtract(
+            divide(
+              get(latestSeries, `performance.${data.currency}`),
+              get(seriesFromDate, `performance.${data.currency}`)),
+            1),
+          100),
+        2);
+      const performanceAsOf = round(
+        multiply(
+          subtract(
+            divide(
+              get(seriesFromDate, `performance.${data.currency}`),
+              100),
+            1),
+          100),
+        2);
+      // pl
+      const plSince = subtract(get(latestSeries, `pl.${data.currency}`, 0), get(seriesFromDate, `pl.${data.currency}`, 0)).toString();
+      const plAsOf = get(seriesFromDate, `pl.${data.currency}`, 0);
 
-    setInvestmentDataY(merge(
-      investmentDataY,
-      {
-        amount: {
-          latest: undefined,
-          asof: round(amountAsOf, 0),
-          since: round(amountSince, 0),
-        },
-        inflows: {
-          latest: undefined,
-          asof: round(inflowsAsOf, 0),
-          since: round(inflowsSince, 0),
-        },
-        outflows: {
-          latest: undefined,
-          asof: round(outflowsAsOf, 0),
-          since: round(outflowsSince, 0),
-        },
-        invested: {
-          latest: undefined,
-          asof: round(investedAsOf, 0),
-          since: round(investedSince, 0),
-        },
-        performance: {
-          latest: undefined,
-          asof: round(performanceAsOf, 2),
-          since: round(performanceSince, 2),
-        },
-        pl: {
-          latest: undefined,
-          asof: round(plAsOf, 0),
-          since: round(plSince, 0),
-        },
-      }));
-    setInvestmentDate(date);
-    const newTimeFrame = investmentTimeFrame === 'latest' ? 'asof' : investmentTimeFrame;
-    setInvestmentTimeFrame(newTimeFrame);
+      setInvestmentDataY(merge(
+        investmentDataY,
+        {
+          amount: {
+            latest: undefined,
+            asof: round(amountAsOf, 0),
+            since: round(amountSince, 0),
+          },
+          inflows: {
+            latest: undefined,
+            asof: round(inflowsAsOf, 0),
+            since: round(inflowsSince, 0),
+          },
+          outflows: {
+            latest: undefined,
+            asof: round(outflowsAsOf, 0),
+            since: round(outflowsSince, 0),
+          },
+          invested: {
+            latest: undefined,
+            asof: round(investedAsOf, 0),
+            since: round(investedSince, 0),
+          },
+          performance: {
+            latest: undefined,
+            asof: round(performanceAsOf, 2),
+            since: round(performanceSince, 2),
+          },
+          pl: {
+            latest: undefined,
+            asof: round(plAsOf, 0),
+            since: round(plSince, 0),
+          },
+        }));
+      setInvestmentDate(date);
+      const newTimeFrame = investmentTimeFrame === 'latest' ? 'asof' : investmentTimeFrame;
+      setInvestmentTimeFrame(newTimeFrame);
+    }
   }
 
   useEffect(() => {
     refetch();
   }, [currencyChanged]);
+
+  useEffect(() => {
+    console.log('initializing subscription');
+    const user = auth.currentUser;
+    const uid: string = user?.uid.toString() || '';
+    const jobRef = doc(db, 'users', uid, 'jobs', 'seriescalc');
+    const unsubscribe = onSnapshot(jobRef, job => {
+      const j = job.data()
+      if (get(j, 'running')) {
+        setCalculating(true)
+      } else {
+        setCalculating(false);
+        refetch();
+      }
+    });
+  }, [])
 
   function pfListBoxes() {
     return (
@@ -318,11 +343,11 @@ export default function HomeScreen({ route, navigation }) {
         y: d.amount[data.currency]
       }
     })
-    const maxDate = dataCash[dataCash.length - 1].x;
-    const minAmount = min(dataCash.map(d => d.y));
-    const maxAmount = max(dataCash.map(d => d.y));
+    const maxDate = dataCash.length ? dataCash[dataCash.length - 1].x : formatISO(new Date(), { representation: 'date' });
+    const minAmount = dataCash.length ? min(dataCash.map(d => d.y)) : 0;
+    const maxAmount = dataCash.length ? max(dataCash.map(d => d.y)) : 0;
     return (<Flex p='0' m='0' w='100%'>
-      <VictoryChart height={180} width={chartWidth*0.93} padding={10}
+      <VictoryChart height={180} width={chartWidth * 0.93} padding={10}
         containerComponent={
           <VictoryVoronoiContainer onActivated={(points, props) => {
             setCashDataX(points[0].x);
@@ -376,11 +401,11 @@ export default function HomeScreen({ route, navigation }) {
         y: subtract(get(d, `inflows.index[${data.currency}]`, 0), get(d, `outflows.index[${data.currency}]`, 0))
       }
     })
-    const maxDate = dataAmount[dataAmount.length - 1].x;
-    const minAmount = min(dataAmount.map(d => d.y));
-    const maxAmount = max(dataAmount.map(d => d.y));
+    const maxDate = dataAmount.length ? dataAmount[dataAmount.length - 1].x : formatISO(new Date(), { representation: 'date' });
+    const minAmount = dataAmount.length ? min(dataAmount.map(d => d.y)) : 0;
+    const maxAmount = dataAmount.length ? max(dataAmount.map(d => d.y)) : 0;
     return (<Flex p='0' m='0'>
-      <VictoryChart height={180} width={chartWidth*0.93} padding={10} 
+      <VictoryChart height={180} width={chartWidth * 0.93} padding={10}
         containerComponent={
           <VictoryVoronoiContainer onActivated={(points, props) => {
             setInvestmentDataX(points[0].x);
@@ -532,6 +557,23 @@ export default function HomeScreen({ route, navigation }) {
               </VStack>
             </Box>
           </Pressable>} keyExtractor={item => item.id} />
+        {/* <Alert w="100%" status='success' variant='left-accent'>
+          <VStack space={2} flexShrink={1} w="100%">
+            <HStack flexShrink={1} space={2} justifyContent="space-between">
+              <HStack space={2} flexShrink={1}>
+                <Alert.Icon mt="1" />
+                <Text fontSize="md" color="coolGray.800">
+                  recalculating...
+                </Text>
+              </HStack>
+              <IconButton variant="unstyled" _focus={{
+                borderWidth: 0
+              }} icon={<CloseIcon size="3" />} _icon={{
+                color: "coolGray.600"
+              }} />
+            </HStack>
+          </VStack>
+        </Alert> */}
       </View >
     )
   }
@@ -574,7 +616,11 @@ export default function HomeScreen({ route, navigation }) {
     <SafeAreaView style={{ paddingBottom: 20 }}>
       <View h="25%">
         <Box>
-          <Text pl="3" pt="5">My Net Worth:</Text>
+          <HStack>
+            <Text pl="3" pt="5">My Net Worth:</Text>
+            <Spacer />
+            {calculating && <Badge colorScheme="success" h='6'>recalculating...</Badge>}
+          </HStack>
           <Heading fontSize="3xl" pl="3" pb="0">
             <Text color="emerald.700">{data.totalValue} {data.currency}</Text>
           </Heading>

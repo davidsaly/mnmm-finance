@@ -63,10 +63,8 @@ export default function AddTransactionScreen({ navigation, route }) {
         }
     });
     async function onSubmit(data) {
-        await createTransaction(data);
         setSaveLabel('Saving...');
-        await new Promise(resolve => setTimeout(resolve, 4000));
-        refetch();
+        await createTransaction(data);
         navigation.goBack();
     };
 
@@ -230,6 +228,7 @@ export default function AddTransactionScreen({ navigation, route }) {
                                             onChangeText={onChange}
                                             value={value}
                                             InputLeftElement={<Icon as={<AntDesign name="plus" />} size={3} ml="2" color="muted.400" />}
+                                            keyboardType="number-pad"
                                         />
                                     )}
                                     name="amountIn"
@@ -315,6 +314,8 @@ export default function AddTransactionScreen({ navigation, route }) {
                                             onChangeText={onChange}
                                             value={value}
                                             InputLeftElement={<Icon as={<AntDesign name="minus" />} size={3} ml="2" color="muted.400" />}
+                                            // keyboardType="numeric"
+                                            keyboardType="number-pad"
                                         />
                                     )}
                                     name="amountOut"
