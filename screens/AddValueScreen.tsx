@@ -16,10 +16,11 @@ import {
 } from "native-base";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, addDoc, collection } from "firebase/firestore";
+import { getFirestore, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useForm, Controller } from 'react-hook-form';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { format, formatISO } from 'date-fns';
+import { loadSeriesFromDate } from './AddTransactionScreen';
 
 import { loadData } from './Home';
 
@@ -34,6 +35,9 @@ export default function AddValueScreen({ route, navigation }) {
     const [date, setDate] = useState<string>();
     const [currency, setCurrency] = useState<string>(accountCurrency);
     const [saveLabel, setSaveLabel] = useState('Save');
+    const [beforeAfter, setBeforeAfter] = useState('na');
+    const [record, setRecord] = useState({ linkRef: '' });
+    const [recordDocs, setRecordDocs] = useState([{ recordType: 'na', id: 'na', amount: '0', currency: 'EUR', linkRef: '' }])
 
     const { refetch } = loadData();
 
@@ -49,12 +53,24 @@ export default function AddValueScreen({ route, navigation }) {
         handleConfirm(new Date());
     }, [])
 
-    const handleConfirm = (dt) => {
+    const handleConfirm = async (dt) => {
         console.log("A date has been picked: ", dt);
         const formatted = format(dt, 'MMMM dd yyyy');
         setDate(formatted);
         hideDatePicker();
+        await loadSeriesAndSet(dt, account);
     };
+
+    async function loadSeriesAndSet(date: any, account: any) {
+        const recordDocs: any[] = await loadSeriesFromDate(date, { pf: { id: portfolio }, id: account });
+        setRecordDocs(recordDocs);
+        if (recordDocs.length) {
+            setRecord(recordDocs[recordDocs.length - 1]);
+            setBeforeAfter('After');
+        } else {
+            setBeforeAfter('na');
+        }
+    }
 
     const { control, handleSubmit, formState: { errors } } = useForm({
         defaultValues: {
@@ -62,13 +78,15 @@ export default function AddValueScreen({ route, navigation }) {
             portfolio: '',
             account: '',
             currency: '',
-            date: ''
+            date: '',
+            record,
+            beforeAfter,
         }
     });
     async function onSubmit(data) {
         setSaveLabel('Saving...');
         await createValue(data);
-        navigation.navigate('Account Details', { valueAdded: data, accountId: account, portfolioId: portfolio, accountName});
+        navigation.navigate('Account Details', { valueAdded: data, accountId: account, portfolioId: portfolio, accountName });
     };
 
     async function createValue(val) {
@@ -83,7 +101,9 @@ export default function AddValueScreen({ route, navigation }) {
                 amount: val.amount,
                 currency,
                 date: formatISO(new Date(date), { representation: 'date' }),
-                created: formatISO(new Date(), { format: 'basic' }),
+                created: serverTimestamp(),
+                ordering: beforeAfter,
+                orderingRef: record.linkRef,
             });
             console.log('Created a value with id', docRef.id);
         } catch (e) {
@@ -136,6 +156,57 @@ export default function AddValueScreen({ route, navigation }) {
                             Value of the account.
                         </FormControl.HelperText>
                     </FormControl>
+                    {recordDocs.length > 0 && <HStack>
+                        <FormControl w="1/2" isRequired isInvalid={'beforeAfter' in errors}>
+                            <FormControl.Label><Text fontSize="xs">Impact</Text></FormControl.Label>
+                            <Controller
+                                control={control}
+                                render={({ field: { onChange, value } }) => (
+                                    <Select
+                                        accessibilityLabel="Choose Before/After"
+                                        placeholder="Before/After"
+                                        _selectedItem={{
+                                            bg: "teal.600",
+                                            endIcon: <CheckIcon size={5} />
+                                        }}
+                                        selectedValue={beforeAfter}
+                                        onValueChange={(itemValue: string) => {
+                                            setBeforeAfter(itemValue)
+                                        }}
+                                    >
+                                        <Select.Item key={'Before'} label='Before' value={'Before'} />
+                                        <Select.Item key={'After'} label='After' value={'After'} />
+                                    </Select>
+                                )}
+                                name="beforeAfter"
+                            />
+                        </FormControl>
+                        <FormControl w="1/2" isRequired isInvalid={'record' in errors}>
+                            <FormControl.Label><Text fontSize="xs">Transaction/Value</Text></FormControl.Label>
+                            <Controller
+                                control={control}
+                                render={({ field: { onChange, value } }) => (
+                                    <Select
+                                        accessibilityLabel="Choose Transaction/Value"
+                                        placeholder="Transaction/Value"
+                                        _selectedItem={{
+                                            bg: "teal.600",
+                                            endIcon: <CheckIcon size={5} />
+                                        }}
+                                        selectedValue={record.linkRef}
+                                        onValueChange={(itemValue: string) => {
+                                            setRecord({ linkRef: itemValue });
+                                        }}
+                                    >
+                                        {recordDocs.map(rec => {
+                                            return (<Select.Item key={rec.id} label={`${rec.recordType} of ${rec.amount} ${rec.currency}`} value={rec.linkRef} />)
+                                        })}
+                                    </Select>
+                                )}
+                                name="record"
+                            />
+                        </FormControl>
+                    </HStack>}
                     <FormControl mb="5" isInvalid={'date' in errors}>
                         <FormControl.Label>Date</FormControl.Label>
                         <Controller

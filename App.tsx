@@ -18,13 +18,31 @@ export default function () {
       // 50: 'white',
       // },
     },
+    components: {
+      Input: {
+        variants: {
+          outline: {
+            _focus: {
+              _stack: {
+                style: {
+                  outlineColor: 'emerald.100'
+                }
+              },
+              borderColor: 'muted.700',
+              borderWidth: '0',
+              bg: 'emerald.100'
+            },
+          },
+        },
+      },
+    },
     config: {
       // initialColorMode: 'dark',
     },
   });
   return (
     <SafeAreaProvider>
-      <NativeBaseProvider>
+      <NativeBaseProvider theme={theme}>
         <QueryClientProvider client={queryClient}>
           <RootNavigation />
         </QueryClientProvider>
