@@ -11,6 +11,7 @@ import SettingsScreen from '../screens/Settings';
 import AddAccountScreen from '../screens/AddAccountScreen';
 import AccountDetailsScreen from '../screens/AccountDetailsScreen';
 import AddValueScreen from '../screens/AddValueScreen';
+import EditValueScreen from '../screens/editValueScreen';
 
 import { Button, VStack, Box, Text, Divider, Pressable, HStack, Icon } from "native-base";
 import { signOut, getAuth } from "firebase/auth";
@@ -54,6 +55,9 @@ function AccountStackScreen() {
       </Stack.Group>
       <Stack.Group screenOptions={{ presentation: 'modal' }}>
         <Stack.Screen name="Add Value" component={AddValueScreen} />
+      </Stack.Group>
+      <Stack.Group screenOptions={{ presentation: 'modal' }}>
+        <Stack.Screen name="Edit Value" component={EditValueScreen} />
       </Stack.Group>
       <Stack.Group screenOptions={{ presentation: 'modal' }}>
         <Stack.Screen name="Add Transaction" component={AddTransactionScreen} />

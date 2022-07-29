@@ -114,7 +114,7 @@ export async function getValuesForAccount(db: any, auth: any, pfId: any, accId: 
         const values = await getDocs(q);
         let docs: DocumentData[] = [];
         values.forEach(doc => {
-            docs = [...docs, { ...doc.data(), ...{ id: doc.id } }];
+            docs = [...docs, { ...doc.data(), ...{ id: doc.id, ref: doc.ref.path } }];
         });
         return docs;
     } catch (e) {
@@ -150,7 +150,7 @@ export async function getTransactionsForAccount(db: any, auth: any, pfId: any, a
         const values = await getDocs(q);
         let docs: DocumentData[] = [];
         values.forEach(doc => {
-            docs = [...docs, { ...doc.data(), ...{ id: doc.id } }];
+            docs = [...docs, { ...doc.data(), ...{ id: doc.id, ref: doc.ref.path } }];
         });
         return docs;
     } catch (e) {

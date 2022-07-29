@@ -227,7 +227,7 @@ export const loadTransactions = (acc) => useQuery(['loadTransactions', acc], asy
         const values = await getDocs(q);
         let docs: DocumentData[] = [];
         values.forEach(doc => {
-            docs = [...docs, { ...doc.data(), ...{ id: doc.id } }];
+            docs = [...docs, { ...doc.data(), ...{ id: doc.id, ref: doc.ref.path } }];
         });
         return docs;
     } catch (e) {

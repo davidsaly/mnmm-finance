@@ -23,7 +23,5 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
-/* to connect to local emulator
-let dbE = getFirestore();
-connectFirestoreEmulator(db, 'localhost', 8080);
-*/
+// to connect to local emulator
+// connectFirestoreEmulator(db, 'localhost', 8080);

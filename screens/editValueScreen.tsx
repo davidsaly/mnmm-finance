@@ -16,19 +16,20 @@ import {
 } from "native-base";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { getFirestore, addDoc, updateDoc ,collection, doc, serverTimestamp, deleteDoc } from "firebase/firestore";
 import { useForm, Controller } from 'react-hook-form';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { format, formatISO } from 'date-fns';
 import { loadSeriesFromDate } from './AddTransactionScreen';
+import {filter} from 'lodash';
 
 import { loadData } from './Home';
 
 const auth = getAuth();
 const db = getFirestore();
 
-export default function AddValueScreen({ route, navigation }) {
-    const { portfolio, account, accountName, accountCurrency } = route.params;
+export default function EditValueScreen({ route, navigation }) {
+    const { portfolio, account, accountName, accountCurrency, dt, amount, ref, docId } = route.params;
 
     // for date picker
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
@@ -51,7 +52,7 @@ export default function AddValueScreen({ route, navigation }) {
     };
 
     useEffect(() => {
-        handleConfirm(new Date());
+        handleConfirm(new Date(dt));
     }, [])
 
     const handleConfirm = async (dt) => {
@@ -64,7 +65,9 @@ export default function AddValueScreen({ route, navigation }) {
 
     async function loadSeriesAndSet(date: any, account: any) {
         setSaveDisabled(true);
-        const recordDocs: any[] = await loadSeriesFromDate(date, { pf: { id: portfolio }, id: account });
+        let recordDocs: any[] = await loadSeriesFromDate(date, { pf: { id: portfolio }, id: account });
+        recordDocs = filter(recordDocs, doc => doc.id !== docId );
+        console.log('recordDocs', recordDocs);
         setRecordDocs(recordDocs);
         if (recordDocs.length) {
             setRecord(recordDocs[recordDocs.length - 1]);
@@ -77,7 +80,7 @@ export default function AddValueScreen({ route, navigation }) {
 
     const { control, handleSubmit, formState: { errors } } = useForm({
         defaultValues: {
-            amount: '',
+            amount,
             portfolio: '',
             account: '',
             currency: '',
@@ -88,29 +91,37 @@ export default function AddValueScreen({ route, navigation }) {
     });
     async function onSubmit(data) {
         setSaveLabel('Saving...');
-        await createValue(data);
+        await editValue(data);
         navigation.navigate('Account Details', { valueAdded: data, accountId: account, portfolioId: portfolio, accountName });
     };
 
-    async function createValue(val) {
-        console.log('create value', val);
+    async function deleteValue() {
+        try {
+            const docRef = await deleteDoc(doc(db, ref))
+            console.error('Value has been deleted');
+        } catch (e) {
+            console.error('Error deleting document');
+        }
+        navigation.navigate('Account Details', { valueAdded: 'deleted', accountId: account, portfolioId: portfolio, accountName });
+    }
+
+    async function editValue(val) {
+        console.log('edit value', val);
         console.log('date', date);
         console.log('currency', currency);
         const user = auth.currentUser;
-        const email = user?.email;
         const uid: string = user?.uid || '';
         try {
-            const docRef = await addDoc(collection(db, 'users', uid, 'portfolios', portfolio, 'accounts', account, 'values'), {
+            const docRef = await updateDoc(doc(db, ref), {
                 amount: val.amount,
                 currency,
                 date: formatISO(new Date(date), { representation: 'date' }),
-                created: serverTimestamp(),
                 ordering: beforeAfter,
                 orderingRef: record.linkRef,
             });
-            console.log('Created a value with id', docRef.id);
+            console.log('Updated the value document');
         } catch (e) {
-            console.error('Error adding document: ', e);
+            console.error('Error updating document: ', e);
         }
     }
 
@@ -128,7 +139,7 @@ export default function AddValueScreen({ route, navigation }) {
             }}>
                 <Box>
                     <Text bold fontSize="xl" mb="4">
-                        Add Value of {accountName}
+                        Edit Value of {accountName}
                     </Text>
                     <FormControl mb="5" isRequired isInvalid={'amount' in errors}>
                         <FormControl.Label>Value in {currency}</FormControl.Label>
@@ -242,6 +253,9 @@ export default function AddValueScreen({ route, navigation }) {
                             {saveLabel}
                         </Button>
                         <Spacer />
+                        <Button onPress={deleteValue} colorScheme="warning">
+                            Delete
+                        </Button>
                         <Button mt="2" variant="unstyled" onPress={cancel}>
                             Cancel
                         </Button>

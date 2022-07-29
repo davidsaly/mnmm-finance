@@ -111,12 +111,12 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
               value={value.password}
               onChangeText={(text) => setValue({ ...value, password: text })}
               InputRightElement={
-                <Button size="xs" rounded="none" w="1/6" h="full" onPress={handleClick}>
+                <Button colorScheme="emerald" size="xs" rounded="none" w="1/5" h="full" onPress={handleClick}>
                   {show ? "Hide" : "Show"}
                 </Button>
               }
               placeholder="password" />
-            <Button mt="2" colorScheme="cyan" onPress={signUp}>
+            <Button colorScheme="emerald" mt="2" onPress={signUp}>
               Sign up
             </Button>
           </VStack>
