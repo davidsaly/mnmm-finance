@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { DocumentData, collection, query, orderBy, onSnapshot, QuerySnapshot } from "firebase/firestore";
+import { DocumentData, collection, query, orderBy, onSnapshot, QuerySnapshot, deleteDoc, doc } from "firebase/firestore";
 import { auth } from '../utils/hooks/useAuthentication';
 import { db } from '../config/firebase';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { format } from 'date-fns'
+import { format } from 'date-fns';
+import { Entypo } from "@expo/vector-icons";
 import {
     VStack,
     HStack,
@@ -15,7 +16,10 @@ import {
     Pressable,
     Button,
     SectionList,
-    View
+    View,
+    Popover,
+    IconButton,
+    Icon
 } from "native-base";
 import BackButton from '../components/backButton';
 import { getValuesForAccount, getTransactionsForAccount } from '../utils/dataCalls';
@@ -56,8 +60,16 @@ export default function AccountDetailsScreen({ route, navigation }) {
         navigation.navigate('Add Value', { portfolio: portfolioId, account: accountId, accountName, accountCurrency: ccy })
     }
 
+    function editValue(amount: string, date: any, ref: any, docId: string) {
+        navigation.navigate('Edit Value', { portfolio: portfolioId, account: accountId, accountName, accountCurrency: ccy, amount, dt: date, ref, docId })
+    }
+
     function addTransaction() {
         navigation.navigate('Add Transaction', { account: accountName, accountCurrency: ccy })
+    }
+
+    function editTransaction() {
+        navigation.navigate('Edit Transaction', { account: accountName, accountCurrency: ccy })
     }
 
     useEffect(() => {
@@ -73,6 +85,90 @@ export default function AccountDetailsScreen({ route, navigation }) {
         refetch();
     }, []));
 
+    async function deleteValue(value: any) {
+        try {
+            const docRef = await deleteDoc(doc(db, value.ref))
+            console.log('Value has been deleted');
+        } catch (e) {
+            console.error('Error deleting document');
+        }
+        navigation.navigate('Account Details', { valueAdded: 'deleted', accountId, portfolioId, accountName });
+    }
+
+    async function deleteTransaction(tx: any) {
+        const linkedTx = tx.transactionRef;
+        if (linkedTx) {
+            const path = linkedTx.path;
+            try {
+                const docRef = await deleteDoc(doc(db, path))
+                console.log('Linked tx has been deleted');
+            } catch (e) {
+                console.error('Error deleting transaction document');
+            }
+        }
+        try {
+            const docRef = await deleteDoc(doc(db, tx.ref))
+            console.log('tx has been deleted');
+        } catch (e) {
+            console.error('Error deleting transaction document');
+        }
+        refetch();
+    }
+
+    function DeleteTransactionPopover(item) {
+        return <Box>
+            <Popover placement='left' trigger={triggerProps => {
+                return <IconButton {...triggerProps}
+                    colorScheme='emerald'
+                    size="sm"
+                    icon={<Icon as={Entypo} name="dots-three-horizontal" />} />
+            }}>
+                <Popover.Content accessibilityLabel="Delete Transaction" w="56">
+                    <Popover.Arrow />
+                    <Popover.CloseButton />
+                    <Popover.Header>Delete Transaction</Popover.Header>
+                    <Popover.Body>
+                        This will remove the transaction. This action cannot be
+                        reversed. Deleted data can not be recovered.
+                    </Popover.Body>
+                    <Popover.Footer justifyContent="flex-end">
+                        <Button.Group space={2}>
+                            <Button colorScheme="danger" onPress={() => deleteTransaction(item)}>Delete</Button>
+                        </Button.Group>
+                    </Popover.Footer>
+                </Popover.Content>
+            </Popover>
+        </Box>;
+    }
+
+    function DeleteValuePopover(item: any) {
+        return <Box>
+            <Popover placement='left' trigger={triggerProps => {
+                return <IconButton {...triggerProps}
+                    colorScheme='emerald'
+                    size="sm"
+                    icon={<Icon as={Entypo} name="dots-three-horizontal" />} />
+            }}>
+                <Popover.Content accessibilityLabel="Delete Transaction" w="56">
+                    <Popover.Arrow />
+                    <Popover.CloseButton />
+                    <Popover.Header>Delete Value</Popover.Header>
+                    <Popover.Body>
+                        This will remove the value. This action cannot be
+                        reversed. Deleted data can not be recovered.
+                    </Popover.Body>
+                    <Popover.Footer justifyContent="flex-end">
+                        <Button.Group space={2}>
+                            <Button colorScheme="danger" onPress={() => deleteValue(item)}>Delete</Button>
+                        </Button.Group>
+                    </Popover.Footer>
+                </Popover.Content>
+            </Popover>
+        </Box>;
+    }
+
+
+
     function valueList() {
         return (
             <View h="90%">
@@ -87,7 +183,9 @@ export default function AccountDetailsScreen({ route, navigation }) {
                 </HStack>
                 <FlatList data={values} renderItem={({
                     item
-                }) => <Pressable key={item.id} onPress={() => console.log('Pressed value')}>
+                }) => <Pressable key={item.id}
+                // onPress={() => editValue(item.amount, item.date, item.ref, item.id)}
+                >
                         <Box borderBottomWidth="1" _dark={{
                             borderColor: "gray.600"
                         }} borderColor="coolGray.200" pl="4" pr="5" py="2">
@@ -98,6 +196,8 @@ export default function AccountDetailsScreen({ route, navigation }) {
                                     }} color="coolGray.800" bold>
                                         {format(new Date(item.date), 'MMMM dd yyyy')}
                                     </Text>
+                                    <Spacer />
+                                    {DeleteValuePopover(item)}
                                 </HStack>
                                 <HStack>
                                     <Text mt="2" fontSize="xs" color="coolGray.700">
@@ -129,7 +229,9 @@ export default function AccountDetailsScreen({ route, navigation }) {
                 </HStack>
                 <FlatList data={data} renderItem={({
                     item
-                }) => <Pressable key={item.id} onPress={() => console.log('Pressed transaction')}>
+                }) => <Pressable key={item.id}
+                // onPress={() => console.log('Pressed transaction', item)}
+                >
                         <Box borderBottomWidth="1" _dark={{
                             borderColor: "gray.600"
                         }} borderColor="coolGray.200" pl="4" pr="5" py="2">
@@ -140,6 +242,8 @@ export default function AccountDetailsScreen({ route, navigation }) {
                                     }} color="coolGray.800" bold>
                                         {format(new Date(item.date), 'MMMM dd yyyy')}
                                     </Text>
+                                    <Spacer />
+                                    {DeleteTransactionPopover(item)}
                                 </HStack>
                                 <HStack>
                                     <Text mt="2" fontSize="xs" color="coolGray.700">

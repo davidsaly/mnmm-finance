@@ -636,14 +636,14 @@ export default function HomeScreen({ route, navigation }) {
               Add Transaction
             </Center>
           </Pressable>
-          <Center h='10' w="20" bg="light.50" rounded="md" shadow={3}
+          {/* <Center h='10' w="20" bg="light.50" rounded="md" shadow={3}
             _text={{
               color: "emerald.700",
               fontSize: "xs"
             }} >
             Add Value
-          </Center>
-          <Pressable onPress={() => refetch()}>
+          </Center> */}
+          {/* <Pressable onPress={() => refetch()}>
             <Center h='10' w="20" bg="light.50" rounded="md" shadow={3}
               _text={{
                 color: "emerald.700",
@@ -651,7 +651,7 @@ export default function HomeScreen({ route, navigation }) {
               }} >
               Reload data
             </Center>
-          </Pressable>
+          </Pressable> */}
         </HStack>
         <Divider my="3" />
       </View>

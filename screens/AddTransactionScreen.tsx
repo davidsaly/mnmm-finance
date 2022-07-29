@@ -174,7 +174,9 @@ export default function AddTransactionScreen({ navigation, route }) {
                 setOutBeforeAfter('na');
             }
         }
-        setSaveDisabled(false);
+        if (txType) {
+            setSaveDisabled(false);
+        }
     }
 
     // async function loadSeriesInAndSet(date: any, account: any) {
